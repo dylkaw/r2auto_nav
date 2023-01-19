@@ -1,5 +1,17 @@
 Kaw Jun Rei Dylan dylkaw
+<<<<<<< HEAD
 Gopal Radhakrishnan Vejaya Sri Nithish 
 James Sebastian Thie
 MKuruppu
 
+=======
+Gopal Radhakrishnan Vejaya Sri Nithish veeejayy 
+<<<<<<< HEAD
+James Sebastian Thie jamesthie
+Pan Yongjing nyoom-pan
+yooo
+=======
+James Sebastian Thie jamesthie 
+>>>>>>> 4a8d37ba88b77ac06c7411be5835eef2259faaa2
+edited by yj
+>>>>>>> ce0a54e06e91b517e1b786b41ef9c89def5ed67f
