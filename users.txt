@@ -1,5 +1,9 @@
 Kaw Jun Rei Dylan dylkaw
 Gopal Radhakrishnan Vejaya Sri Nithish 
+<<<<<<< HEAD
 James Sebastian Thie jamesthie
 Pan Yongjing nyoom-pan
 yooo
+=======
+James Sebastian Thie jamesthie 
+>>>>>>> 4a8d37ba88b77ac06c7411be5835eef2259faaa2
