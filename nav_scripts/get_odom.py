@@ -84,14 +84,17 @@ class Waypoint(Node):
 
     def odom_callback(self, msg):
         # self.get_logger().info('In odom_callback')
-        orientation_quat =  msg.pose.pose.orientation
-        self.get_logger().info(orientation_quat)
+        orientation =  msg.pose.pose.orientation
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
+        self.get_logger().info(orientation)
         if keyboard.read_key() == "w":
             numbers = input("Enter table numbers:")
             while numbers != 0:
                 num = numbers % 10
                 numbers = (numbers // 10)
-                waypoints[num] = orientation_quat
+                data = (x, y, orientation)
+                waypoints[num].append(data)
 
         if keyboard.read_key() == "s":
             print("saving...")
