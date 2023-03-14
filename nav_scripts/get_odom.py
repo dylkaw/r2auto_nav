@@ -23,7 +23,6 @@ import numpy as np
 import math
 import cmath
 import time
-import keyboard
 import pickle
 
 # constants
@@ -88,7 +87,8 @@ class Waypoint(Node):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
         self.get_logger().info(orientation)
-        if keyboard.read_key() == "w":
+        inp = input("Enter input")
+        if inp == "w":
             numbers = input("Enter table numbers:")
             while numbers != 0:
                 num = numbers % 10
@@ -96,7 +96,7 @@ class Waypoint(Node):
                 data = (x, y, orientation)
                 waypoints[num].append(data)
 
-        if keyboard.read_key() == "s":
+        elif inp == "s":
             print("saving...")
             with open('filename.pickle', 'wb') as handle:
                 pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -106,7 +106,8 @@ class Waypoint(Node):
 def main(args=None):
     rclpy.init(args=args)
     try:
-        if keyboard.read_key() == "s":
+        start = input("Press s to start")
+        if  start == "s":
             waypoint = Waypoint()
             rclpy.spin(waypoint)
 
