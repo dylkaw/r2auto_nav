@@ -54,7 +54,6 @@ def euler_from_quaternion(x, y, z, w):
     t3 = +2.0 * (w * z + x * y)
     t4 = +1.0 - 2.0 * (y * y + z * z)
     yaw_z = math.atan2(t3, t4)
-
     return roll_x, pitch_y, yaw_z # in radians
 
 class AutoNav(Node):
@@ -121,15 +120,15 @@ class AutoNav(Node):
         # self.occdata = np.uint8(oc2.reshape(msg.info.height,msg.info.width,order='F'))
         self.occdata = np.uint8(oc2.reshape(msg.info.height,msg.info.width))
         # print to file
-        # np.savetxt(mapfile, self.occdata)
+        np.savetxt(mapfile, self.occdata)
 
 
     def scan_callback(self, msg):
-        # self.get_logger().info('In scan_callback')
+        self.get_logger().info('In scan_callback')
         # create numpy array
         self.laser_range = np.array(msg.ranges)
         # print to file
-        # np.savetxt(scanfile, self.laser_range)
+        np.savetxt(scanfile, self.laser_range)
         # replace 0's with nan
         self.laser_range[self.laser_range==0] = np.nan
 
