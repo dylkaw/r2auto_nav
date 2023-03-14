@@ -107,7 +107,7 @@ def main(args=None):
     rclpy.init(args=args)
     try:
         start = input("Press s to start")
-        if  start == "s":
+        if start == "s":
             waypoint = Waypoint()
             rclpy.spin(waypoint)
 
