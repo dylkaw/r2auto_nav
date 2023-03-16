@@ -127,7 +127,6 @@ def main(args=None):
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
     except KeyboardInterrupt:
-        waypoint.stopbot()
         waypoint.destroy_node()
         rclpy.shutdown()
 
