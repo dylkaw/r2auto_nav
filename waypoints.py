@@ -36,37 +36,10 @@ scanfile = 'lidar.txt'
 mapfile = 'map.txt'
 waypoints = {1: [], 2: [], 3: [], 4: [], 5: [], 6: []}
 
-# code from https://automaticaddison.com/how-to-convert-a-quaternion-into-euler-angles-in-python/
-def euler_from_quaternion(x, y, z, w):
-    """
-    Convert a quaternion into euler angles (roll, pitch, yaw)
-    roll is rotation around x in radians (counterclockwise)
-    pitch is rotation around y in radians (counterclockwise)
-    yaw is rotation around z in radians (counterclockwise)
-    """
-    t0 = +2.0 * (w * x + y * z)
-    t1 = +1.0 - 2.0 * (x * x + y * y)
-    roll_x = math.atan2(t0, t1)
-
-    t2 = +2.0 * (w * y - z * x)
-    t2 = +1.0 if t2 > +1.0 else t2
-    t2 = -1.0 if t2 < -1.0 else t2
-    pitch_y = math.asin(t2)
-
-    t3 = +2.0 * (w * z + x * y)
-    t4 = +1.0 - 2.0 * (y * y + z * z)
-    yaw_z = math.atan2(t3, t4)
-
-    return roll_x, pitch_y, yaw_z # in radians
-
 class Waypoint(Node):
 
     def __init__(self):
         super().__init__('waypoint')
-        
-        # create publisher for moving TurtleBot
-        self.publisher_ = self.create_publisher(Twist,'cmd_vel',10)
-        # self.get_logger().info('Created publisher')
         
         # create subscription to track orientation
         self.odom_subscription = self.create_subscription(
@@ -107,8 +80,6 @@ class Waypoint(Node):
             with open('filename.pickle', 'wb') as handle:
                 pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        # self.roll, self.pitch, self.yaw = euler_from_quaternion(orientation_quat.x, orientation_quat.y, orientation_quat.z, orientation_quat.w)
-
 def main(args=None):
     rclpy.init(args=args)
     try:
@@ -117,15 +88,6 @@ def main(args=None):
         if start == "s":
             rclpy.spin(waypoint)
 
-        # auto_nav.mover()
-
-    # create matplotlib figure
-    # plt.ion()
-    # plt.show()
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     except KeyboardInterrupt:
         waypoint.destroy_node()
         rclpy.shutdown()
