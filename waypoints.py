@@ -85,7 +85,8 @@ class Waypoint(Node):
         # self.get_logger().info('In odom_callback')
         inp = input("Enter input")
         if inp == "w":
-            numbers = input("Enter table numbers:")
+            numbers = int(input("Enter table numbers:"))
+            print("saving")
             orien =  msg.pose.pose.orientation
             px = msg.pose.pose.position.x
             py = msg.pose.pose.position.y
@@ -93,12 +94,13 @@ class Waypoint(Node):
             oy = orien.y
             oz = orien.z
             ow = orien.w
-            self.get_logger().info(orien)
+            # self.get_logger().info(orien)
             while numbers != 0:
                 num = numbers % 10
                 numbers = (numbers // 10)
                 data = (px, py, ox, oy, oz, ow)
                 waypoints[num].append(data)
+            print(waypoints)
 
         elif inp == "s":
             print("saving...")
@@ -110,9 +112,9 @@ class Waypoint(Node):
 def main(args=None):
     rclpy.init(args=args)
     try:
+        waypoint = Waypoint()
         start = input("Press s to start")
         if start == "s":
-            waypoint = Waypoint()
             rclpy.spin(waypoint)
 
         # auto_nav.mover()
