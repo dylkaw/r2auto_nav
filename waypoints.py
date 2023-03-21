@@ -93,60 +93,69 @@ class Waypoint(Node):
 
     def occ_callback(self, msg):
         # create numpy array
-        occdata = np.array(msg.data)
-        # compute histogram to identify bins with -1, values between 0 and below 50, 
-        # and values between 50 and 100. The binned_statistic function will also
-        # return the bin numbers so we can use that easily to create the image 
-        occ_counts, edges, binnum = scipy.stats.binned_statistic(occdata, np.nan, statistic='count', bins=occ_bins)
-        # get width and height of map
-        iwidth = msg.info.width
-        iheight = msg.info.height
-        # calculate total number of bins
-        total_bins = iwidth * iheight
-        # log the info
-        # self.get_logger().info('Unmapped: %i Unoccupied: %i Occupied: %i Total: %i' % (occ_counts[0], occ_counts[1], occ_counts[2], total_bins))
+        inp = str(input("enter input:"))
+        if inp == "w":
+            occdata = np.array(msg.data)
+            # compute histogram to identify bins with -1, values between 0 and below 50, 
+            # and values between 50 and 100. The binned_statistic function will also
+            # return the bin numbers so we can use that easily to create the image 
+            occ_counts, edges, binnum = scipy.stats.binned_statistic(occdata, np.nan, statistic='count', bins=occ_bins)
+            # get width and height of map
+            iwidth = msg.info.width
+            iheight = msg.info.height
+            # calculate total number of bins
+            total_bins = iwidth * iheight
+            # log the info
+            # self.get_logger().info('Unmapped: %i Unoccupied: %i Occupied: %i Total: %i' % (occ_counts[0], occ_counts[1], occ_counts[2], total_bins))
 
-        # find transform to obtain base_link coordinates in the map frame
-        # lookup_transform(target_frame, source_frame, time)
-        try:
-            trans = self.tfBuffer.lookup_transform('map', 'base_link', rclpy.time.Time())
-        except (LookupException, ConnectivityException, ExtrapolationException) as e:
-            self.get_logger().info('No transformation found')
-            return
-            
-        cur_pos = trans.transform.translation
-        cur_rot = trans.transform.rotation
-        self.get_logger().info('Trans: %f, %f' % (cur_pos.x, cur_pos.y))
-        # convert quaternion to Euler angles
-        roll, pitch, yaw = euler_from_quaternion(cur_rot.x, cur_rot.y, cur_rot.z, cur_rot.w)
-        self.get_logger().info('Rot-Yaw: R: %f D: %f' % (yaw, np.degrees(yaw)))
-        numbers = int(input("Enter table numbers:"))
-        while numbers != 0:
-            num = numbers % 10
-            numbers = (numbers // 10)
-            data = (cur_pos.x, cur_pos.y, roll, pitch, yaw)
-            waypoints[num].append(data)
-
-    def readKey(self):
-        try:
-            while True:
-                cmd_char = str(input("w to save waypoint, s to export pickle"))
-                if cmd_char == "w":
-                    print("saving waypoint")
-                    rclpy.spin_once(self)
+            # find transform to obtain base_link coordinates in the map frame
+            # lookup_transform(target_frame, source_frame, time)
+            try:
+                trans = self.tfBuffer.lookup_transform('map', 'base_link', rclpy.time.Time())
+            except (LookupException, ConnectivityException, ExtrapolationException) as e:
+                self.get_logger().info('No transformation found')
+                return
                 
-                elif cmd_char == "s":
-                    print("exporting pickle")
-                    with open('waypoints.pickle', 'wb') as handle:
-                        pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            cur_pos = trans.transform.translation
+            cur_rot = trans.transform.rotation
+            self.get_logger().info('Trans: %f, %f' % (cur_pos.x, cur_pos.y))
+            # convert quaternion to Euler angles
+            roll, pitch, yaw = euler_from_quaternion(cur_rot.x, cur_rot.y, cur_rot.z, cur_rot.w)
+            self.get_logger().info('Rot-Yaw: R: %f D: %f' % (yaw, np.degrees(yaw)))
+            numbers = int(input("Enter table numbers:"))
+            while numbers != 0:
+                num = numbers % 10
+                numbers = (numbers // 10)
+                data = (cur_pos.x, cur_pos.y, roll, pitch, yaw)
+                waypoints[num].append(data)
+            print(waypoints)
+
+        elif inp == "s":
+            print("exporting pickle")
+            with open('waypoints.pickle', 'wb') as handle:
+                pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    # def readKey(self):
+    #     try:
+    #         while True:
+    #             cmd_char = str(input("w to save waypoint, s to export pickle"))
+    #             if cmd_char == "w":
+    #                 print("saving waypoint")
+    #                 rclpy.spin_once(self)
+                
+    #             elif cmd_char == "s":
+    #                 print("exporting pickle")
+    #                 with open('waypoints.pickle', 'wb') as handle:
+    #                     pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
-        except Exception as e:
-            print(e)
+    #     except Exception as e:
+    #         print(e)
             
-		# Ctrl-c detected
-        finally:
-        	# stop moving
-            print('waypoint mapping completed')
+	# 	# Ctrl-c detected
+    #     finally:
+    #     	# stop moving
+    #         print('waypoint mapping completed')
 
 
 
@@ -175,20 +184,16 @@ class Waypoint(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    waypoint_node = Waypoint()
-    waypoint_node.readKey()
-    waypoint_node.destroy_node()
-    
-    rclpy.shutdown()
-    # try:
-    #     waypoint = Waypoint()
-    #     start = input("Press s to start")
-    #     if start == "s":
-    #         rclpy.spin(waypoint)
 
-    # except KeyboardInterrupt:
-    #     waypoint.destroy_node()
-    #     rclpy.shutdown()
+    try:
+        waypoint = Waypoint()
+        start = input("Press s to start")
+        if start == "s":
+            rclpy.spin(waypoint)
+
+    except KeyboardInterrupt:
+        waypoint.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
