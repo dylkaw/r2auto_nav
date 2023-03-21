@@ -84,7 +84,7 @@ class AutoNav(Node):
         self.px, self.py = orien.x, orien.y
 
     def scan_callback(self, msg):
-        self.get_logger().info('In scan_callback')
+        # self.get_logger().info('In scan_callback')
         # create numpy array
         self.laser_range = np.array(msg.ranges)
         # print to file
@@ -132,7 +132,7 @@ class AutoNav(Node):
             current_yaw = self.yaw
             # convert the current yaw to complex form
             c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-            # self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
+            self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
             # get difference in angle between current and target
             c_change = c_target_yaw / c_yaw
             # get the sign to see if we can stop
