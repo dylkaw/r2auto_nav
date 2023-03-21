@@ -166,7 +166,7 @@ class AutoNav(Node):
                 goal_x = waypoint[0]
                 goal_y = waypoint[1]
                 goal_yaw = waypoint[4]
-                rot_angle = math.atan2(goal_y - self.y, goal_x - self.x)
+                rot_angle = math.atan2(goal_y - self.py, goal_x - self.px)
                 self.rotatebot(rot_angle)
                 self.move_to_point(goal_x, goal_y)
                 self.rotatebot(goal_yaw - self.yaw)
