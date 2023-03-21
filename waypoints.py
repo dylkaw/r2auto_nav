@@ -179,7 +179,7 @@ class Waypoint(Node):
 
         elif inp == "s":
             print("saving...")
-            with open('filename.pickle', 'wb') as handle:
+            with open('waypoints.pickle', 'wb') as handle:
                 pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def main(args=None):
