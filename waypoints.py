@@ -176,7 +176,7 @@ class Waypoint(Node):
 def main(args=None):
     rclpy.init(args=args)
     waypoint_node = Waypoint()
-    Waypoint.readKey()
+    waypoint_node.readKey()
     waypoint_node.destroy_node()
     
     rclpy.shutdown()
