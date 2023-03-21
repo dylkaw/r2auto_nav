@@ -12,8 +12,6 @@ import pickle
 
 rotatechange = 0.1
 speedchange = 0.05
-x = 0.0
-y = 0.0 
 rot_q = 0.0 
 theta = 0.0
 scanfile = 'lidar.txt'
@@ -152,10 +150,10 @@ class AutoNav(Node):
         twist.angular.z = 0.0
         twist.linear.x = 0.1
         self.publisher_.publisher(twist)
-        distance = math.sqrt(math.pow(goal_x - self.x, 2) + math.pow(goal_y - self.y, 2))
+        distance = math.sqrt(math.pow(goal_x - self.px, 2) + math.pow(goal_y - self.py, 2))
         while distance > 0.03:
             rclpy.spin_once(self)
-            distance = math.sqrt(math.pow(goal_x - self.x, 2) + math.pow(goal_y - self.y, 2))
+            distance = math.sqrt(math.pow(goal_x - self.px, 2) + math.pow(goal_y - self.py, 2))
 
         self.get_logger().info('Reached goal')
 
