@@ -16,6 +16,7 @@ x = 0.0
 y = 0.0 
 rot_q = 0.0 
 theta = 0.0
+scanfile = 'lidar.txt'
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -76,11 +77,20 @@ class AutoNav(Node):
         self.scan_subscription  # prevent unused variable warning
         self.laser_range = np.array([])
 
-        def odom_callback(self, msg):
-            # self.get_logger().info('In odom_callback')
-            orien =  msg.pose.pose.orientation
-            self.roll, self.pitch, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
-            self.px, self.py = orien.x, orien.y
+    def odom_callback(self, msg):
+        # self.get_logger().info('In odom_callback')
+        orien =  msg.pose.pose.orientation
+        self.roll, self.pitch, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
+        self.px, self.py = orien.x, orien.y
+
+    def scan_callback(self, msg):
+        self.get_logger().info('In scan_callback')
+        # create numpy array
+        self.laser_range = np.array(msg.ranges)
+        # print to file
+        np.savetxt(scanfile, self.laser_range)
+        # replace 0's with nan
+        self.laser_range[self.laser_range==0] = np.nan
 
     # function to rotate the TurtleBot
     def rotatebot(self, rot_angle):
