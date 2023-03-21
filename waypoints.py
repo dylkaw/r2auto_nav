@@ -65,7 +65,7 @@ def euler_from_quaternion(x, y, z, w):
 class Waypoint(Node):
 
     def __init__(self):
-        super().__init__('occupy')
+        super().__init__('waypoint')
         self.occ_subscription = self.create_subscription(
             OccupancyGrid,
             'map',
