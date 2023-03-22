@@ -12,7 +12,7 @@ import cmath
 import time
 
 
-rotatechange = 9.99
+rotatechange = 5
 speedchange = 0.099
 rot_q = 0.0 
 theta = 0.0
