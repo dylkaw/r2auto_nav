@@ -80,8 +80,9 @@ class AutoNav(Node):
     def odom_callback(self, msg):
         # self.get_logger().info('In odom_callback')
         orien =  msg.pose.pose.orientation
+        pos = msg.pose.pose.position
         self.roll, self.pitch, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
-        self.px, self.py = orien.x, orien.y
+        self.px, self.py = pos.x, pos.y
 
     def scan_callback(self, msg):
         # self.get_logger().info('In scan_callback')
@@ -132,7 +133,7 @@ class AutoNav(Node):
             current_yaw = self.yaw
             # convert the current yaw to complex form
             c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-            # self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
+            self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
             # get difference in angle between current and target
             c_change = c_target_yaw / c_yaw
             # get the sign to see if we can stop
@@ -156,6 +157,7 @@ class AutoNav(Node):
         while distance > 0.0000000000000000000000001:
             rclpy.spin_once(self)
             distance = math.sqrt(math.pow(goal_x - self.px, 2) + math.pow(goal_y - self.py, 2))
+            self.get_logger().info('Distance: %f' % (distance))
 
         self.get_logger().info('Reached goal')
 
