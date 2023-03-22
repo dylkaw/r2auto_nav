@@ -12,8 +12,8 @@ import cmath
 import time
 
 
-rotatechange = 1
-speedchange = 0.05
+rotatechange = 9.99
+speedchange = 0.099
 rot_q = 0.0 
 theta = 0.0
 scanfile = 'lidar.txt'
@@ -132,7 +132,7 @@ class AutoNav(Node):
             current_yaw = self.yaw
             # convert the current yaw to complex form
             c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-            self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
+            # self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
             # get difference in angle between current and target
             c_change = c_target_yaw / c_yaw
             # get the sign to see if we can stop
@@ -153,7 +153,7 @@ class AutoNav(Node):
         twist.linear.x = 0.1
         self.publisher_.publisher(twist)
         distance = math.sqrt(math.pow(goal_x - self.px, 2) + math.pow(goal_y - self.py, 2))
-        while distance > 0.03:
+        while distance > 0.0000000000000000000000001:
             rclpy.spin_once(self)
             distance = math.sqrt(math.pow(goal_x - self.px, 2) + math.pow(goal_y - self.py, 2))
 
