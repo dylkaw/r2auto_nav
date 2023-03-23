@@ -57,6 +57,7 @@ class AutoNav(Node):
         self.yaw = 0
         self.px = 0
         self.py = 0
+        self.target_angle = 0
 
         self.scan_subscription = self.create_subscription(
             LaserScan,
@@ -83,19 +84,19 @@ class AutoNav(Node):
         self.laser_range[self.laser_range==0] = np.nan
 
     # function to rotate the TurtleBot
-    def rotatebot(self, rot_angle):
+    def rotatebot(self):
         try:
             rclpy.spin_once(self)
             twist = Twist()
             twist.linear.x = 0.0
-            if (rot_angle - self.yaw < 0):
-                twist.angular.z = -0.1
+            if (self.target_angle - self.yaw < 0):
+                twist.angular.z = -0.3
             else:
-                twist.angular.z = 0.1
-            self.publisher_.publish(twist)
-            while abs(self.yaw - rot_angle) > 0.05:
+                twist.angular.z = 0.3
+            while abs(self.yaw - self.target_angle) > 0.05:
+                self.publisher_.publish(twist)
                 rclpy.spin_once(self)
-                self.get_logger().info(f'Rotating to {math.degrees(rot_angle)} from {math.degrees(self.yaw)}')
+                self.get_logger().info(f'Rotating to {math.degrees(self.target_angle)} from {math.degrees(self.yaw)}')
             twist.linear.x = 0.0
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
@@ -182,7 +183,8 @@ class AutoNav(Node):
                 goal_y = waypoint[1]
                 goal_yaw = waypoint[4]
                 rot_angle = math.atan2(goal_y - self.py, goal_x - self.px)
-                self.rotatebot(rot_angle)
+                self.target_angle = rot_angle
+                self.rotatebot()
                 # self.move_to_point(goal_x, goal_y)
                 # self.rotatebot(goal_yaw - self.yaw)
             print("ending...")
