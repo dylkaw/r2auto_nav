@@ -113,7 +113,7 @@ class AutoNav(Node):
         # Start moving
         twist.angular.z = 0.0
         twist.linear.x = 0.1
-        self.publisher_.publisher(twist)
+        self.publisher_.publish(twist)
         distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
         self.get_logger().info('Initial Distance: %f' % (distance))
         while distance >= 0.01:
