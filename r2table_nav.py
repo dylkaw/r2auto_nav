@@ -58,6 +58,7 @@ class AutoNav(Node):
         self.px = 0
         self.py = 0
         self.target_angle = 0
+        self.end_yaw = 0
         self.table = 0
 
         self.scan_subscription = self.create_subscription(
@@ -115,13 +116,16 @@ class AutoNav(Node):
         twist.linear.x = 0.1
         distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
         self.get_logger().info('Initial Distance: %f' % (distance))
-        while distance >= 0.02:
+        while distance >= 0.025:
             rclpy.spin_once(self)
             self.publisher_.publish(twist)
             distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
             self.get_logger().info('Distance: %f' % (distance))
 
         self.get_logger().info('Reached goal')
+
+    # def stop_at_table(self):
+
 
 
     def mover(self):
@@ -132,12 +136,14 @@ class AutoNav(Node):
             for waypoint in waypoints[table_no]:
                 self.goal_x = waypoint[0]
                 self.goal_y = waypoint[1]
-                goal_yaw = waypoint[4]
+                self.end_yaw = waypoint[4]
                 rot_angle = math.atan2(self.goal_y - self.py, self.goal_x - self.px)
                 self.target_angle = rot_angle
                 self.rotatebot()
                 self.move_to_point()
-                # self.rotatebot(goal_yaw - self.yaw)
+            self.target_angle = self.end_yaw
+            self.rotatebot()
+            
             print("ending...")
             break
 
