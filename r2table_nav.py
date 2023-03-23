@@ -31,19 +31,11 @@ def euler_from_quaternion(x, y, z, w):
     pitch is rotation around y in radians (counterclockwise)
     yaw is rotation around z in radians (counterclockwise)
     """
-    t0 = +2.0 * (w * x + y * z)
-    t1 = +1.0 - 2.0 * (x * x + y * y)
-    roll_x = math.atan2(t0, t1)
-
-    t2 = +2.0 * (w * y - z * x)
-    t2 = +1.0 if t2 > +1.0 else t2
-    t2 = -1.0 if t2 < -1.0 else t2
-    pitch_y = math.asin(t2)
 
     t3 = +2.0 * (w * z + x * y)
     t4 = +1.0 - 2.0 * (y * y + z * z)
     yaw_z = math.atan2(t3, t4)
-    return roll_x, pitch_y, yaw_z # in radians
+    return yaw_z # in radians
 
 class AutoNav(Node):
 
@@ -61,10 +53,7 @@ class AutoNav(Node):
             self.odom_callback,
             10)
         # self.get_logger().info('Created subscriber')
-        self.odom_subscription  # prevent unused variable warning
         # initialize variables
-        self.roll = 0
-        self.pitch = 0
         self.yaw = 0
         self.px = 0
         self.py = 0
@@ -81,7 +70,7 @@ class AutoNav(Node):
         # self.get_logger().info('In odom_callback')
         orien =  msg.pose.pose.orientation
         pos = msg.pose.pose.position
-        self.roll, self.pitch, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
+        self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
         self.px, self.py = pos.x, pos.y
 
     def scan_callback(self, msg):
@@ -104,7 +93,7 @@ class AutoNav(Node):
             else:
                 twist.angular.z = 0.1
             self.publisher_.publish(twist)
-            while abs(rot_angle - self.yaw) > 0.1:
+            while abs(self.yaw - rot_angle) > 0.05:
                 rclpy.spin_once(self)
                 self.get_logger().info(f'Rotating to {math.degrees(rot_angle)} from {math.degrees(self.yaw)}')
             twist.linear.x = 0.0
@@ -194,7 +183,7 @@ class AutoNav(Node):
                 goal_yaw = waypoint[4]
                 rot_angle = math.atan2(goal_y - self.py, goal_x - self.px)
                 self.rotatebot(rot_angle)
-                self.move_to_point(goal_x, goal_y)
+                # self.move_to_point(goal_x, goal_y)
                 # self.rotatebot(goal_yaw - self.yaw)
             print("ending...")
             break

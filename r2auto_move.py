@@ -58,7 +58,6 @@ class Auto_Mover(Node):
         
         
 
-        
 
 
     def calling_point(self):
