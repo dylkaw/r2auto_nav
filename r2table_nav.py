@@ -115,7 +115,7 @@ class AutoNav(Node):
         twist.linear.x = 0.1
         distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
         self.get_logger().info('Initial Distance: %f' % (distance))
-        while distance >= 0.01:
+        while distance >= 0.02:
             rclpy.spin_once(self)
             self.publisher_.publish(twist)
             distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
