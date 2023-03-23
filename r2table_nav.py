@@ -190,6 +190,41 @@ class AutoNav(Node):
             print("ending...")
             break
 
+    def rotate(self):
+        points_char = int(input("enter waypoint to travel: "))
+        twist = geometry_msgs.msg.Twist()
+        # print("qewagdsfnc")
+        
+        # rclpy.init_node("speed_controller")
+        # r = rclpy.Rate(4)
+        goal_x = waypoints[points_char][0][0]
+        goal_y = waypoints[points_char][0][1]
+        # theta = math.atan2(goal_y-y,goal_x-x)
+        inc_x = 10000000 
+        try:
+
+                while inc_x != 0:
+                    print("while in loop")
+                    rclpy.spin_once(self)
+                    print(self.orien)
+                    
+                    inc_x = goal_x - self.px
+
+                    # print("x",self.x, "inc",inc_x)
+                    inc_y = goal_y - self.py
+                    if abs(self.yaw - theta) > 0.1:
+                        print(" in bottom")
+                        twist.angular.z = 0.3
+                        twist.linear.x = 0.0
+                    else:
+                        twist.linear.x = 0.0
+                        twist.angular.z = 0.0 
+                    self.publisher_.publish(twist)
+        finally:
+            # stop moving   
+            twist.linear.x = 0.0
+            twist.angular.z = 0.0
+            self.publisher_.publish(twist)
 
 def main(args = None):
         rclpy.init(args = args)
