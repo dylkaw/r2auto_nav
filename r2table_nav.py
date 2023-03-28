@@ -60,6 +60,7 @@ class AutoNav(Node):
         self.target_angle = 0
         self.end_yaw = 0
         self.table = 0
+        self.has_can = False
 
         self.scan_subscription = self.create_subscription(
             LaserScan,
@@ -142,7 +143,18 @@ class AutoNav(Node):
 
         self.get_logger().info('Reached goal')
 
-
+    def return_home(self):
+        for waypoint in reversed(waypoints[self.table]):
+            self.get_logger().info("Returning home!")
+            self.goal_x = waypoint[0]
+            self.goal_y = waypoint[1]
+            self.end_yaw = waypoint[4]
+            rot_angle = math.atan2(self.goal_y - self.py, self.goal_x - self.px)
+            self.target_angle = rot_angle
+            self.rotatebot()
+            self.move_to_point()
+        self.target_angle = self.end_yaw
+        self.rotatebot()
 
 
     def mover(self):
@@ -160,7 +172,7 @@ class AutoNav(Node):
                 self.move_to_point()
             self.target_angle = self.end_yaw
             self.rotatebot()
-            
+            self.return_home()
             print("ending...")
             break
 
