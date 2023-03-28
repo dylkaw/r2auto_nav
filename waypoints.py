@@ -183,7 +183,7 @@ def main(args=None):
                 numbers = int(input("Enter table numbers:"))
                 rclpy.spin_once(waypoint)
                 print("saving")
-                roll, pitch, yaw = euler_from_quaternion(waypoint.orien.x, waypoint.orien.y, waypoint.orien.z, waypoint.w)
+                roll, pitch, yaw = euler_from_quaternion(waypoint.orien.x, waypoint.orien.y, waypoint.orien.z, waypoint.orien.w)
                 # self.get_logger().info(orien)
                 while numbers != 0:
                     num = numbers % 10
