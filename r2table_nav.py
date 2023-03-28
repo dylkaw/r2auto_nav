@@ -111,10 +111,6 @@ class AutoNav(Node):
                 else:
                     twist.angular.z = -0.1
 
-            if (self.target_angle - self.yaw < 0):
-                twist.angular.z = -0.1
-            else:
-                twist.angular.z = 0.1
             while abs(self.yaw - self.target_angle) > 0.005:
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
@@ -221,8 +217,8 @@ class AutoNav(Node):
                 self.move_to_point()
             self.target_angle = self.end_yaw
             self.rotatebot()
-            self.get_close_to_table()
-            self.return_home()
+            # self.get_close_to_table()
+            # self.return_home()
             print("ending...")
             break
 
