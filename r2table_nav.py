@@ -99,12 +99,12 @@ class AutoNav(Node):
                 else:
                     twist.angular.z = -0.1
             elif (self.target_angle < 0 and self.yaw > 0):
-                if abs(self.yaw - self.target_angle) > math.PI:
+                if abs(self.yaw - self.target_angle) > math.pi:
                     twist.angular.z = 0.1
                 else:
                     twist.angular.z = -0.1
             else:
-                if abs(self.target_angle - self.yaw) > math.PI:
+                if abs(self.target_angle - self.yaw) > math.pi:
                     twist.angular.z = -0.1
                 else:
                     twist.angular.z = 0.1
