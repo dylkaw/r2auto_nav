@@ -68,6 +68,7 @@ class AutoNav(Node):
             self.scan_callback,
             qos_profile_sensor_data)
         self.scan_subscription  # prevent unused variable warning
+        
         self.laser_range = np.array([])
 
     def odom_callback(self, msg):
@@ -143,6 +144,54 @@ class AutoNav(Node):
 
         self.get_logger().info('Reached goal')
 
+    def get_close_to_table(self):
+        self.get_logger().info("Moving close to table")
+        rclpy.spin_once(self)
+        twist = Twist()
+        if self.table == 6:
+            front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
+            tableAngleDeg = np.argmin(front180)
+            while front180[tableAngleDeg] > 0.75:
+                rclpy.spin_once(self)
+                twist.linear.x = 0.1
+                twist.angular.z = 0.0
+                self.publisher_.publish(twist)
+                front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
+                tableAngleDeg = np.argmin(front180)
+            tableAngleRad = math.radians(tableAngleDeg - 90)
+            self.target_angle = tableAngleRad
+            self.rotatebot()
+            dist_to_table = self.laser_range[tableAngleDeg - 90]
+            while dist_to_table > 0.15:
+                rclpy.spin_once(self)
+                self.get_logger().info(f"Distance to table: {dist_to_table}")
+                dist_to_table = self.laser_range[tableAngleDeg - 90]
+                twist.linear.x = 0.1
+                twist.angular.z = 0.0
+                self.publisher_.publish(twist)
+
+        else:
+            front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
+            tableAngleDeg = np.argmin(front30)
+            tableAngleRad = math.radians(tableAngleDeg - 15)
+            self.target_angle = tableAngleRad
+            self.rotatebot()
+            dist_to_table = self.laser_range[tableAngleDeg - 15]
+            while dist_to_table > 0.15:
+                rclpy.spin_once(self)
+                self.get_logger().info(f"Distance to table: {dist_to_table}")
+                dist_to_table = self.laser_range[tableAngleDeg - 15]
+                twist.linear.x = 0.1
+                twist.angular.z = 0.0
+                self.publisher_.publish(twist)
+
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
+        self.publisher_.publish(twist)
+        self.get_logger().info("Reached table")
+
+
+
     def return_home(self):
         for waypoint in reversed(waypoints[self.table]):
             self.get_logger().info("Returning home!")
@@ -172,6 +221,7 @@ class AutoNav(Node):
                 self.move_to_point()
             self.target_angle = self.end_yaw
             self.rotatebot()
+            self.get_close_to_table()
             self.return_home()
             print("ending...")
             break
