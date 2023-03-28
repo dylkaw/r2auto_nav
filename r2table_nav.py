@@ -17,6 +17,7 @@ speedchange = 0.1
 rot_q = 0.0 
 theta = 0.0
 scanfile = 'lidar.txt'
+WAYPOINT_THRESHOLD = 0.03
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -162,7 +163,7 @@ class AutoNav(Node):
         twist.linear.x = 0.1
         distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
         self.get_logger().info('Initial Distance: %f' % (distance))
-        while distance >= 0.025:
+        while distance >= WAYPOINT_THRESHOLD:
             rclpy.spin_once(self)
             self.publisher_.publish(twist)
             distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
@@ -184,9 +185,8 @@ class AutoNav(Node):
                 self.publisher_.publish(twist)
                 front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
                 tableAngleDeg = np.argmin(front180)
-            tableAngleRad = math.radians(tableAngleDeg - 90)
-            self.target_angle = tableAngleRad
-            self.rotatebot()
+            self.target_angle = tableAngleDeg
+            self.rotatebot(self.target_angle - math.degrees(self.yaw))
             dist_to_table = self.laser_range[tableAngleDeg - 90]
             while dist_to_table > 0.15:
                 rclpy.spin_once(self)
@@ -199,10 +199,9 @@ class AutoNav(Node):
         else:
             front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
             tableAngleDeg = np.argmin(front30)
-            tableAngleRad = math.radians(tableAngleDeg - 15)
-            self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}, rad: {tableAngleRad}")
-            self.target_angle = tableAngleRad
-            self.rotatebot()
+            self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
+            self.target_angle = tableAngleDeg
+            self.rotatebot(self.target_angle - math.degrees(self.yaw))
             dist_to_table = self.laser_range[tableAngleDeg - 15]
             while dist_to_table > 0.2:
                 rclpy.spin_once(self)
@@ -225,12 +224,12 @@ class AutoNav(Node):
             self.goal_x = waypoint[0]
             self.goal_y = waypoint[1]
             self.end_yaw = waypoint[4]
-            rot_angle = math.atan2(self.goal_y - self.py, self.goal_x - self.px)
+            rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
             self.target_angle = rot_angle
-            self.rotatebot()
+            self.rotatebot(self.target_angle - math.degrees(self.yaw))
             self.move_to_point()
         self.target_angle = self.end_yaw
-        self.rotatebot()
+        self.rotatebot(self.target_angle - math.degrees(self.yaw))
 
 
     def mover(self):
@@ -248,8 +247,8 @@ class AutoNav(Node):
                 self.move_to_point()
             self.target_angle = math.degrees(self.end_yaw)
             self.rotatebot(self.target_angle - math.degrees(self.yaw))
-            # self.get_close_to_table()
-            # self.return_home()
+            self.get_close_to_table()
+            self.return_home()
             print("ending...")
             break
 
