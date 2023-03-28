@@ -84,7 +84,7 @@ class AutoNav(Node):
         # self.get_logger().info('In odom_callback')
         orien =  msg.pose.pose.orientation
         pos = msg.pose.pose.position
-        self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
+        _, _, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
         self.px, self.py = pos.x, pos.y
 
     def scan_callback(self, msg):
