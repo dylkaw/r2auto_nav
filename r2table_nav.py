@@ -91,10 +91,28 @@ class AutoNav(Node):
             rclpy.spin_once(self)
             twist = Twist()
             twist.linear.x = 0.0
-            if (self.target_angle - self.yaw < 0):
-                twist.angular.z = -0.3
+
+            # logic to determine turning direction
+            if (self.target_angle > 0 and self.yaw > 0) or (self.target_angle < 0 and self.yaw < 0):
+                if self.target_angle > self.yaw:
+                    twist.angular.z = 0.1
+                else:
+                    twist.angular.z = -0.1
+            elif (self.target_angle < 0 and self.yaw > 0):
+                if abs(self.yaw - self.target_angle) > math.PI:
+                    twist.angular.z = 0.1
+                else:
+                    twist.angular.z = -0.1
             else:
-                twist.angular.z = 0.3
+                if abs(self.target_angle - self.yaw) > math.PI:
+                    twist.angular.z = -0.1
+                else:
+                    twist.angular.z = 0.1
+
+            if (self.target_angle - self.yaw < 0):
+                twist.angular.z = -0.1
+            else:
+                twist.angular.z = 0.1
             while abs(self.yaw - self.target_angle) > 0.005:
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
@@ -124,7 +142,6 @@ class AutoNav(Node):
 
         self.get_logger().info('Reached goal')
 
-    # def stop_at_table(self):
 
 
 
