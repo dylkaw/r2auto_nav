@@ -90,6 +90,9 @@ class Waypoint(Node):
         self.roll = 0
         self.pitch = 0
         self.yaw = 0
+        self.orien = 0
+        self.x = 0
+        self.y = 0
 
     # def occ_callback(self, msg):
     #     # create numpy array
@@ -161,26 +164,10 @@ class Waypoint(Node):
 
     def odom_callback(self, msg):
         # self.get_logger().info('In odom_callback')
-        inp = input("Enter input")
-        if inp == "w":
-            numbers = int(input("Enter table numbers:"))
-            print("saving")
-            orien =  msg.pose.pose.orientation
-            px = msg.pose.pose.position.x
-            py = msg.pose.pose.position.y
-            roll, pitch, yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
-            # self.get_logger().info(orien)
-            while numbers != 0:
-                num = numbers % 10
-                numbers = (numbers // 10)
-                data = (px, py, roll, pitch, yaw)
-                waypoints[num].append(data)
-            print(waypoints)
-
-        elif inp == "s":
-            print("saving...")
-            with open('waypoints.pickle', 'wb') as handle:
-                pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        self.orien = msg.pose.pose.orientation
+        self.x = msg.pose.pose.position.x
+        self.y = msg.pose.pose.position.y
+            
 
 def main(args=None):
     rclpy.init(args=args)
@@ -189,7 +176,26 @@ def main(args=None):
         waypoint = Waypoint()
         start = input("Press s to start")
         if start == "s":
-            rclpy.spin(waypoint)
+            rclpy.spin_once(waypoint)
+        while True:
+            inp = input("Enter input")
+            if inp == "w":
+                numbers = int(input("Enter table numbers:"))
+                rclpy.spin_once(waypoint)
+                print("saving")
+                roll, pitch, yaw = euler_from_quaternion(waypoint.orien.x, waypoint.orien.y, waypoint.orien.z, waypoint.w)
+                # self.get_logger().info(orien)
+                while numbers != 0:
+                    num = numbers % 10
+                    numbers = (numbers // 10)
+                    data = (waypoint.x, waypoint.y, roll, pitch, yaw)
+                    waypoints[num].append(data)
+                print(waypoints)
+
+            elif inp == "s":
+                print("saving...")
+                with open('waypoints.pickle', 'wb') as handle:
+                    pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     except KeyboardInterrupt:
         waypoint.destroy_node()
