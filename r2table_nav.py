@@ -18,6 +18,7 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.03
+STOPPING_THRESHOLD = 0.25
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -185,10 +186,11 @@ class AutoNav(Node):
                 self.publisher_.publish(twist)
                 front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
                 tableAngleDeg = np.argmin(front180)
+            tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
             self.target_angle = tableAngleDeg
             self.rotatebot(self.target_angle - math.degrees(self.yaw))
             dist_to_table = self.laser_range[tableAngleDeg - 90]
-            while dist_to_table > 0.15:
+            while dist_to_table > STOPPING_THRESHOLD:
                 rclpy.spin_once(self)
                 self.get_logger().info(f"Distance to table: {dist_to_table}")
                 dist_to_table = self.laser_range[tableAngleDeg - 90]
@@ -199,14 +201,16 @@ class AutoNav(Node):
         else:
             front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
             tableAngleDeg = np.argmin(front30)
+            tableAngleDeg = 360 - (15 - tableAngleDeg) if tableAngleDeg > 15 else tableAngleDeg - 15
             self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
             self.target_angle = tableAngleDeg
             self.rotatebot(self.target_angle - math.degrees(self.yaw))
             dist_to_table = self.laser_range[tableAngleDeg - 15]
-            while dist_to_table > 0.2:
+            while dist_to_table > STOPPING_THRESHOLD:
                 rclpy.spin_once(self)
                 self.get_logger().info(f"Distance to table: {dist_to_table}")
-                dist_to_table = self.laser_range[tableAngleDeg - 15]
+                front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
+                dist_to_table = np.min(front30)
                 twist.linear.x = 0.1
                 twist.angular.z = 0.0
                 self.publisher_.publish(twist)
