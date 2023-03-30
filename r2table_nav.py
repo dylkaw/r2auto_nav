@@ -108,6 +108,7 @@ class AutoNav(Node):
         self.laser_range[self.laser_range==0] = np.nan
 
     def can_callback(self, msg):
+        print(msg.data)
         self.has_can = msg.data
 
     # function to rotate the TurtleBot
