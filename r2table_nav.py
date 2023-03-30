@@ -251,7 +251,7 @@ class AutoNav(Node):
         while rclpy.ok():
             rclpy.spin_once(self)
             table_no = int(input("Enter table number:"))
-
+            rclpy.spin_once(self)
             if self.can:
                 self.table = table_no
                 for waypoint in waypoints[table_no]:
