@@ -17,7 +17,7 @@ speedchange = 0.1
 rot_q = 0.0 
 theta = 0.0
 scanfile = 'lidar.txt'
-WAYPOINT_THRESHOLD = 0.03
+WAYPOINT_THRESHOLD = 0.04
 STOPPING_THRESHOLD = 0.25
 
 with open('waypoints.pickle', 'rb') as f:
@@ -82,6 +82,14 @@ class AutoNav(Node):
         
         self.laser_range = np.array([])
 
+        self.has_can = False
+        self.subscription = self.create_subscription(
+            Bool,
+            'can_pub',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
+
     def odom_callback(self, msg):
         # self.get_logger().info('In odom_callback')
         orien =  msg.pose.pose.orientation
@@ -97,6 +105,9 @@ class AutoNav(Node):
         np.savetxt(scanfile, self.laser_range)
         # replace 0's with nan
         self.laser_range[self.laser_range==0] = np.nan
+
+    def can_callback(self, msg):
+        self.has_can = msg.data
 
     # function to rotate the TurtleBot
     def rotatebot(self, rot_angle):
@@ -240,29 +251,38 @@ class AutoNav(Node):
         while rclpy.ok():
             rclpy.spin_once(self)
             table_no = int(input("Enter table number:"))
-            self.table = table_no
-            for waypoint in waypoints[table_no]:
-                self.goal_x = waypoint[0]
-                self.goal_y = waypoint[1]
-                self.end_yaw = waypoint[4]
-                rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
-                self.target_angle = rot_angle
+
+            if self.can:
+                self.table = table_no
+                for waypoint in waypoints[table_no]:
+                    self.goal_x = waypoint[0]
+                    self.goal_y = waypoint[1]
+                    self.end_yaw = waypoint[4]
+                    rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
+                    self.target_angle = rot_angle
+                    self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                    self.move_to_point()
+                self.target_angle = math.degrees(self.end_yaw)
                 self.rotatebot(self.target_angle - math.degrees(self.yaw))
-                self.move_to_point()
-            self.target_angle = math.degrees(self.end_yaw)
-            self.rotatebot(self.target_angle - math.degrees(self.yaw))
-            self.get_close_to_table()
-            self.return_home()
-            print("ending...")
-            break
+                self.get_close_to_table()
+                self.return_home()
+                print("ending...")
+                break
+            else:
+                self.get_logger().info("No can!")
 
 
 def main(args = None):
+    try:
         rclpy.init(args = args)
         auto_nav = AutoNav()
         auto_nav.mover()
         auto_nav.destroy_node()
         rclpy.shutdown()
+    
+    except KeyboardInterrupt:
+        auto_nav.destroy_node()
+        rclpy.shutdown
 
 if __name__ == '__main__':
     main()
