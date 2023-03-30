@@ -201,7 +201,7 @@ class AutoNav(Node):
             tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
             self.target_angle = tableAngleDeg
             self.rotatebot(self.target_angle - math.degrees(self.yaw))
-            dist_to_table = self.laser_range[tableAngleDeg - 90]
+            dist_to_table = self.laser_range[tableAngleDeg]
             while dist_to_table > STOPPING_THRESHOLD:
                 rclpy.spin_once(self)
                 self.get_logger().info(f"Distance to table: {dist_to_table}")
@@ -221,7 +221,7 @@ class AutoNav(Node):
             self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
             self.target_angle = tableAngleDeg
             self.rotatebot(self.target_angle - math.degrees(self.yaw))
-            dist_to_table = self.laser_range[tableAngleDeg - 15]
+            dist_to_table = self.laser_range[tableAngleDeg]
             while dist_to_table > STOPPING_THRESHOLD:
                 rclpy.spin_once(self)
                 self.get_logger().info(f"Distance to table: {dist_to_table}")
