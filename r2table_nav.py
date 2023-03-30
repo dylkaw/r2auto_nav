@@ -214,7 +214,10 @@ class AutoNav(Node):
             front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
             self.get_logger().info(f"min 360: {np.argmin(self.laser_range)}, min 30: {np.argmin(front30)}")
             tableAngleDeg = np.argmin(front30)
-            tableAngleDeg = tableAngleDeg - 15 if tableAngleDeg > 15 else 360 - (15 - tableAngleDeg)
+            if tableAngleDeg > 15:
+                tableAngleDeg = tableAngleDeg - 15
+            else:
+                360 - (15 - tableAngleDeg)
             self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
             self.target_angle = tableAngleDeg
             self.rotatebot(self.target_angle - math.degrees(self.yaw))
