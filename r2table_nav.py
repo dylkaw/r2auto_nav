@@ -87,7 +87,7 @@ class AutoNav(Node):
         self.subscription = self.create_subscription(
             Bool,
             'can_pub',
-            self.listener_callback,
+            self.can_callback,
             10)
         self.subscription  # prevent unused variable warning
 
