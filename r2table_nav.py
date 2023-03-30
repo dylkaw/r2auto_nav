@@ -19,7 +19,7 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
-STOPPING_THRESHOLD = 0.25
+STOPPING_THRESHOLD = 0.5
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -249,41 +249,45 @@ class AutoNav(Node):
 
 
     def mover(self):
-        while rclpy.ok():
-            rclpy.spin_once(self)
-            table_no = int(input("Enter table number:"))
-            rclpy.spin_once(self)
-            if self.has_can:
-                self.table = table_no
-                for waypoint in waypoints[table_no]:
-                    self.goal_x = waypoint[0]
-                    self.goal_y = waypoint[1]
-                    self.end_yaw = waypoint[4]
-                    rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
-                    self.target_angle = rot_angle
+        try:
+            while rclpy.ok():
+                rclpy.spin_once(self)
+                table_no = int(input("Enter table number:"))
+                rclpy.spin_once(self)
+                if self.has_can:
+                    self.table = table_no
+                    for waypoint in waypoints[table_no]:
+                        self.goal_x = waypoint[0]
+                        self.goal_y = waypoint[1]
+                        self.end_yaw = waypoint[4]
+                        rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
+                        self.target_angle = rot_angle
+                        self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                        self.move_to_point()
+                    self.target_angle = math.degrees(self.end_yaw)
                     self.rotatebot(self.target_angle - math.degrees(self.yaw))
-                    self.move_to_point()
-                self.target_angle = math.degrees(self.end_yaw)
-                self.rotatebot(self.target_angle - math.degrees(self.yaw))
-                self.get_close_to_table()
-                self.return_home()
-                print("ending...")
-                break
-            else:
-                self.get_logger().info("No can!")
+                    self.get_close_to_table()
+                    self.return_home()
+                    print("ending...")
+                    break
+                else:
+                    self.get_logger().info("No can!")
+        finally:
+            twist = Twist()
+            twist.linear.x = 0.0
+            twist.angular.z = 0.0
+            self.publisher_.publish(twist)
+
+
 
 
 def main(args = None):
-    try:
-        rclpy.init(args = args)
-        auto_nav = AutoNav()
-        auto_nav.mover()
-        auto_nav.destroy_node()
-        rclpy.shutdown()
-    
-    except KeyboardInterrupt:
-        auto_nav.destroy_node()
-        rclpy.shutdown
+    rclpy.init(args = args)
+    auto_nav = AutoNav()
+    auto_nav.mover()
+    auto_nav.destroy_node()
+    rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
