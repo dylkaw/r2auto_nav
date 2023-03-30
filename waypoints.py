@@ -196,6 +196,8 @@ def main(args=None):
                 print("saving...")
                 with open('waypoints.pickle', 'wb') as handle:
                     pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                waypoint.destroy_node()
+                rclpy.shutdown()
 
     except KeyboardInterrupt:
         waypoint.destroy_node()

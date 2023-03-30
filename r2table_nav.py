@@ -170,20 +170,29 @@ class AutoNav(Node):
         self.publisher_.publish(twist)
 
     def move_to_point(self):
-        self.get_logger().info('In move_to_point')
-        twist = Twist()
-        # Start moving
-        twist.angular.z = 0.0
-        twist.linear.x = 0.1
-        distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
-        self.get_logger().info('Initial Distance: %f' % (distance))
-        while distance >= WAYPOINT_THRESHOLD:
-            rclpy.spin_once(self)
-            self.publisher_.publish(twist)
+        try:
+            self.get_logger().info('In move_to_point')
+            twist = Twist()
+            # Start moving
+            twist.angular.z = 0.0
+            twist.linear.x = 0.1
             distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
-            self.get_logger().info('Distance: %f' % (distance))
+            self.get_logger().info('Initial Distance: %f' % (distance))
+            while distance >= WAYPOINT_THRESHOLD:
+                rclpy.spin_once(self)
+                self.publisher_.publish(twist)
+                distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
+                self.get_logger().info('Distance: %f' % (distance))
 
-        self.get_logger().info('Reached goal')
+            self.get_logger().info('Reached goal')
+        finally:
+            twist = Twist()
+            twist.linear.x = 0.0
+            twist.angular.z = 0.0
+            self.publisher_.publish(twist)
+            self.destroy_node()
+            rclpy.shutdown()
+
 
     def get_close_to_table(self):
         self.get_logger().info("Moving close to table")
