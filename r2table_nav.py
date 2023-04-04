@@ -48,7 +48,7 @@ def euler_from_quaternion(x, y, z, w):
     t4 = +1.0 - 2.0 * (y * y + z * z)
     yaw_z = math.atan2(t3, t4)
 
-    return roll_x, pitch_y, yaw_z # in radians
+    return roll_x, pitch_y, math.degrees(yaw_z) # in radians
 
 class AutoNav(Node):
 
@@ -276,7 +276,7 @@ class AutoNav(Node):
                     tableAngleDeg = np.argmin(front180)
                 tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
                 self.target_angle = tableAngleDeg
-                self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                self.rotatebot(self.target_angle)
                 dist_to_table = self.laser_range[tableAngleDeg]
                 while dist_to_table > STOPPING_THRESHOLD:
                     rclpy.spin_once(self)
@@ -344,10 +344,10 @@ class AutoNav(Node):
             self.end_yaw = waypoint[4]
             rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
             self.target_angle = rot_angle
-            self.rotatebot(self.target_angle - math.degrees(self.yaw))
+            self.rotatebot(self.target_angle)
             self.move_to_point()
         self.target_angle = self.end_yaw
-        self.rotatebot(self.target_angle - math.degrees(self.yaw))
+        self.rotatebot(self.target_angle)
 
     def stopbot(self):
         self.get_logger().info('Stopping')
@@ -372,10 +372,10 @@ class AutoNav(Node):
                         self.end_yaw = waypoint[4]
                         rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
                         self.target_angle = rot_angle
-                        self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                        self.rotatebot(self.target_angle)
                         self.move_to_point()
                     self.target_angle = math.degrees(self.end_yaw)
-                    self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                    self.rotatebot(self.target_angle)
                     self.get_close_to_table()
                     self.return_home()
                     print("ending...")
