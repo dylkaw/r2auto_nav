@@ -29,7 +29,7 @@ class CanPub(Node):
 
     def timer_callback(self):
         msg = Bool()
-        msg.data = False
+        msg.data = True
         self.publisher_.publish(msg)
         self.get_logger().info(f'Publishing: "{msg.data}"')
 
