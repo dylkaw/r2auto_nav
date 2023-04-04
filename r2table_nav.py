@@ -1,8 +1,8 @@
 import rclpy
 from rclpy.node import Node
 import geometry_msgs.msg
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry, OccupancyGrid
+from geometry_msgs.msg import Twist, Pose
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool, Int8
@@ -69,14 +69,22 @@ class AutoNav(Node):
         # self.get_logger().info('Created publisher')
         
         # create subscription to track orientation
-        self.odom_subscription = self.create_subscription(
-            Odometry,
-            'odom',
-            self.odom_callback,
-            10)
-        self.odom_subscription
+        # self.odom_subscription = self.create_subscription(
+        #     Odometry,
+        #     'odom',
+        #     self.odom_callback,
+        #     10)
+        # self.odom_subscription
         # self.get_logger().info('Created subscriber')
         # initialize variables
+
+        # create subscription for map2base
+        self.map2base_sub = self.create_subscription(
+            Pose,
+            'map2base',
+            self.map2base_callback,
+            1)
+        self.map2base_sub # prevent unused variable warning
 
         self.scan_subscription = self.create_subscription(
             LaserScan,
@@ -99,12 +107,17 @@ class AutoNav(Node):
             10)
         self.infra_subscription
 
-    def odom_callback(self, msg):
-        # self.get_logger().info('In odom_callback')
-        orien =  msg.pose.pose.orientation
-        pos = msg.pose.pose.position
-        _, _, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
-        self.px, self.py = pos.x, pos.y
+    def map2base_callback(self, msg):
+        # self.get_logger().info('In map2basecallback')
+        self.px, self.py = msg.position.x, msg.position.y
+        _, _, self.yaw = euler_from_quaternion(msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
+    
+    # def odom_callback(self, msg):
+    #     # self.get_logger().info('In odom_callback')
+    #     orien =  msg.pose.pose.orientation
+    #     pos = msg.pose.pose.position
+    #     _, _, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
+    #     self.px, self.py = pos.x, pos.y
 
     def scan_callback(self, msg):
         # self.get_logger().info('In scan_callback')
