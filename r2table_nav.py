@@ -163,6 +163,7 @@ class AutoNav(Node):
         twist.linear.x = 0.0
         print("linear.x = 0")
         # set the direction to rotate
+        
         twist.angular.z = c_change_dir * 0.1
         print("c_change_dir: " + str(c_change_dir))
         # start rotation
@@ -180,7 +181,7 @@ class AutoNav(Node):
             current_yaw = self.yaw
             # convert the current yaw to complex form
             c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-            # self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
+            self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
             # get difference in angle between current and target
             c_change = c_target_yaw / c_yaw
             # get the sign to see if we can stop
