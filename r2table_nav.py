@@ -5,7 +5,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int8
 import numpy as np
 import pickle
 import math
@@ -54,6 +54,16 @@ class AutoNav(Node):
     def __init__(self):
         super().__init__('auto_nav')
         
+        self.yaw = 0
+        self.px = 0
+        self.py = 0
+        self.target_angle = 0
+        self.end_yaw = 0
+        self.table = 0
+        self.laser_range = np.array([])
+        self.has_can = False
+        self.ir_status = 0
+
         # create publisher for moving TurtleBot
         self.publisher_ = self.create_publisher(Twist,'cmd_vel',10)
         # self.get_logger().info('Created publisher')
@@ -64,15 +74,9 @@ class AutoNav(Node):
             'odom',
             self.odom_callback,
             10)
+        self.odom_subscription
         # self.get_logger().info('Created subscriber')
         # initialize variables
-        self.yaw = 0
-        self.px = 0
-        self.py = 0
-        self.target_angle = 0
-        self.end_yaw = 0
-        self.table = 0
-        self.has_can = False
 
         self.scan_subscription = self.create_subscription(
             LaserScan,
@@ -80,16 +84,20 @@ class AutoNav(Node):
             self.scan_callback,
             qos_profile_sensor_data)
         self.scan_subscription  # prevent unused variable warning
-        
-        self.laser_range = np.array([])
 
-        self.has_can = False
-        self.subscription = self.create_subscription(
+        self.can_subscription = self.create_subscription(
             Bool,
             'can_pub',
             self.can_callback,
             10)
-        self.subscription  # prevent unused variable warning
+        self.can_subscription  # prevent unused variable warning
+
+        self.infra_subscription = self.create_subscription(
+            Int8,
+            'infra_pub',
+            self.infra_callback,
+            10)
+        self.infra_subscription
 
     def odom_callback(self, msg):
         # self.get_logger().info('In odom_callback')
@@ -108,8 +116,11 @@ class AutoNav(Node):
         self.laser_range[self.laser_range==0] = np.nan
 
     def can_callback(self, msg):
-        print(msg.data)
+        # print(msg.data)
         self.has_can = msg.data
+
+    def infra_callback(self, msg):
+        self.ir_status = msg.data
 
     # function to rotate the TurtleBot
     def rotatebot(self, rot_angle):
@@ -185,70 +196,73 @@ class AutoNav(Node):
                 self.get_logger().info('Distance: %f' % (distance))
 
             self.get_logger().info('Reached goal')
-        finally:
-            twist = Twist()
-            twist.linear.x = 0.0
-            twist.angular.z = 0.0
-            self.publisher_.publish(twist)
+        except Exception as e:
+            self.stopbot()
             self.destroy_node()
             rclpy.shutdown()
+        finally:
+            self.stopbot()
 
 
     def get_close_to_table(self):
         self.get_logger().info("Moving close to table")
         rclpy.spin_once(self)
         twist = Twist()
-        if self.table == 6:
-            front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
-            tableAngleDeg = np.argmin(front180)
-            while front180[tableAngleDeg] > 0.75:
-                rclpy.spin_once(self)
-                twist.linear.x = 0.1
-                twist.angular.z = 0.0
-                self.publisher_.publish(twist)
+        try:
+            if self.table == 6:
                 front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
                 tableAngleDeg = np.argmin(front180)
-            tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
-            self.target_angle = tableAngleDeg
-            self.rotatebot(self.target_angle - math.degrees(self.yaw))
-            dist_to_table = self.laser_range[tableAngleDeg]
-            while dist_to_table > STOPPING_THRESHOLD:
-                rclpy.spin_once(self)
-                self.get_logger().info(f"Distance to table: {dist_to_table}")
-                dist_to_table = self.laser_range[tableAngleDeg - 90]
-                twist.linear.x = 0.1
-                twist.angular.z = 0.0
-                self.publisher_.publish(twist)
+                while front180[tableAngleDeg] > 0.75:
+                    rclpy.spin_once(self)
+                    twist.linear.x = 0.1
+                    twist.angular.z = 0.0
+                    self.publisher_.publish(twist)
+                    front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
+                    tableAngleDeg = np.argmin(front180)
+                tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
+                self.target_angle = tableAngleDeg
+                self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                dist_to_table = self.laser_range[tableAngleDeg]
+                while dist_to_table > STOPPING_THRESHOLD:
+                    rclpy.spin_once(self)
+                    self.get_logger().info(f"Distance to table: {dist_to_table}")
+                    dist_to_table = self.laser_range[tableAngleDeg - 90]
+                    twist.linear.x = 0.1
+                    twist.angular.z = 0.0
+                    self.publisher_.publish(twist)
 
-        else:
-            front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
-            self.get_logger().info(f"min 360: {np.argmin(self.laser_range)}, min 30: {np.argmin(front30)}")
-            tableAngleDeg = np.argmin(front30)
-            if tableAngleDeg > 15:
-                tableAngleDeg = tableAngleDeg - 15
             else:
-                360 - (15 - tableAngleDeg)
-            self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
-            self.target_angle = tableAngleDeg
-            self.rotatebot(self.target_angle - math.degrees(self.yaw))
-            dist_to_table = self.laser_range[tableAngleDeg]
-            while dist_to_table > STOPPING_THRESHOLD:
-                rclpy.spin_once(self)
-                self.get_logger().info(f"Distance to table: {dist_to_table}")
                 front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
-                dist_to_table = np.min(front30)
-                twist.linear.x = 0.1
-                twist.angular.z = 0.0
-                self.publisher_.publish(twist)
-
-        twist.linear.x = 0.0
-        twist.angular.z = 0.0
-        self.publisher_.publish(twist)
+                self.get_logger().info(f"min 360: {np.argmin(self.laser_range)}, min 30: {np.argmin(front30)}")
+                tableAngleDeg = np.argmin(front30)
+                if tableAngleDeg > 15:
+                    tableAngleDeg = tableAngleDeg - 15
+                else:
+                    360 - (15 - tableAngleDeg)
+                self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
+                self.target_angle = tableAngleDeg
+                self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                dist_to_table = self.laser_range[tableAngleDeg]
+                while dist_to_table > STOPPING_THRESHOLD:
+                    rclpy.spin_once(self)
+                    self.get_logger().info(f"Distance to table: {dist_to_table}")
+                    front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
+                    dist_to_table = np.min(front30)
+                    twist.linear.x = 0.1
+                    twist.angular.z = 0.0
+                    self.publisher_.publish(twist)
+        except Exception as e:
+            self.stopbot()
+            self.destroy_node()
+            rclpy.shutdown()
+        finally:
+            self.stopbot()
         self.get_logger().info("Reached table")
 
-
-
     def return_home(self):
+        while self.has_can:
+            rclpy.spin_once(self)
+            self.get_logger().info("Waiting for can to be removed...")
         for waypoint in reversed(waypoints[self.table]):
             self.get_logger().info("Returning home!")
             self.goal_x = waypoint[0]
@@ -261,6 +275,14 @@ class AutoNav(Node):
         self.target_angle = self.end_yaw
         self.rotatebot(self.target_angle - math.degrees(self.yaw))
 
+    def stopbot(self):
+        self.get_logger().info('Stopping')
+        # publish to cmd_vel to move TurtleBot
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
+        # time.sleep(1)
+        self.publisher_.publish(twist)
 
     def mover(self):
         try:
@@ -287,13 +309,28 @@ class AutoNav(Node):
                 else:
                     self.get_logger().info("No can!")
         finally:
-            twist = Twist()
-            twist.linear.x = 0.0
+            self.stopbot()
+
+    def dock(self):
+        #TODO wall following thing
+        rclpy.spin_once(self)
+        twist = Twist()
+        while self.ir_status == 0:
+            self.get_logger().info("Searching for ir emitter")
+            twist.linear.x = 0.1
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
+            rclpy.spin_once(self)
+        self.stopbot()
+    
+        if self.ir_status == 1:
+            self.rotatebot(270)
+        elif self.ir_status == 10:
+            self.rotatebot(90)
 
-
-
+        twist.linear.x = 0.05
+        twist.angular.z = 0.0
+        self.publisher_.publish(twist)
 
 def main(args = None):
     rclpy.init(args = args)
