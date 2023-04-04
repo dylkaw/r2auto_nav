@@ -14,8 +14,8 @@
 
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry, Pose
-from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist, Pose
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
