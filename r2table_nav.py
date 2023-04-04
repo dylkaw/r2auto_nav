@@ -232,33 +232,23 @@ class AutoNav(Node):
                     self.publisher_.publish(twist)
 
             else:
-                # rclpy.spin_once(self)
-                # min_dist_angle = np.nanargmin(self.laser_range)
-                # while self.laser_range[min_dist_angle] > STOPPING_THRESHOLD:
-                #     twist.linear.x = 0.1
-                #     twist.angular.z = 0.0
-                #     self.publisher_.publish(twist)
-                #     self.get_logger().info(f"Distance to table: {self.laser_range[min_dist_angle]}")
-                #     rclpy.spin_once(self)
-                #     min_dist_angle = np.nanargmin(self.laser_range)
-
-                front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+                
+                front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
                 self.get_logger().info(f"min 360: {np.argmin(self.laser_range)}, min 30: {np.argmin(front30)}")
-                tableAngleDeg = np.nanargmin(front30)
-                # if tableAngleDeg > 15:
-                #     tableAngleDeg = tableAngleDeg - 15
-                # else:
-                #     360 - (15 - tableAngleDeg)
-                # self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
-                # self.target_angle = tableAngleDeg
-                # self.rotatebot(self.target_angle - math.degrees(self.yaw))
-                dist_to_table = front30[tableAngleDeg]
+                tableAngleDeg = np.argmin(front30)
+                if tableAngleDeg > 15:
+                    tableAngleDeg = tableAngleDeg - 15
+                else:
+                    360 - (15 - tableAngleDeg)
+                self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
+                self.target_angle = tableAngleDeg
+                self.rotatebot(self.target_angle - math.degrees(self.yaw))
+                dist_to_table = self.laser_range[tableAngleDeg]
                 while dist_to_table > STOPPING_THRESHOLD:
                     rclpy.spin_once(self)
                     self.get_logger().info(f"Distance to table: {dist_to_table}")
-                    front30 = np.nanargmin(self.laser_range[-15:-1], self.laser_range[0:14])
-                    tableAngleDeg = np.nanargmin(front30)
-                    dist_to_table = front30[tableAngleDeg]
+                    front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
+                    dist_to_table = np.min(front30)
                     twist.linear.x = 0.1
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
