@@ -422,20 +422,20 @@ class AutoNav(Node):
                 rclpy.spin_once(self)
                 table_no = int(input("Enter table number:"))
                 rclpy.spin_once(self)
-            if self.has_can:
-                    # while self.table == 0:
-                    #     rclpy.spin_once(self)
-                    #     self.get_logger().info('Waiting for table number...')
-                self.table = table_no
-                self.nav_to_table()
-                self.target_angle = math.degrees(self.end_yaw)
-                self.rotatebot(self.target_angle)
-                self.get_close_to_table()
-                self.return_home()
-                print("ending...")
-                    # break
-            else:
-                self.get_logger().info("No can!")
+                if self.has_can:
+                        # while self.table == 0:
+                        #     rclpy.spin_once(self)
+                        #     self.get_logger().info('Waiting for table number...')
+                    self.table = table_no
+                    self.nav_to_table()
+                    self.target_angle = math.degrees(self.end_yaw)
+                    self.rotatebot(self.target_angle)
+                    self.get_close_to_table()
+                    self.return_home()
+                    print("ending...")
+                        # break
+                else:
+                    self.get_logger().info("No can!")
         finally:
             self.stopbot()
 
