@@ -222,12 +222,12 @@ class AutoNav(Node):
                 else:
                     twist.angular.z = -0.1
             elif (rot_angle < 0 and self.yaw > 0):
-                if abs(self.yaw - rot_angle) > math.pi:
+                if abs(self.yaw - rot_angle) > 180:
                     twist.angular.z = 0.1
                 else:
                     twist.angular.z = -0.1
             elif (rot_angle > 0 and self.yaw < 0):
-                if (rot_angle - self.yaw) > math.pi:
+                if (rot_angle - self.yaw) > 180:
                     twist.angular.z = 0.1
                 else:
                     twist.angular.z = -0.1
@@ -261,10 +261,14 @@ class AutoNav(Node):
             twist.linear.x = 0.1
             distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
             self.get_logger().info('Initial Distance: %f' % (distance))
+            prev_distance = distance
+            i = 0
             while distance >= WAYPOINT_THRESHOLD:
+                i += 1
                 rclpy.spin_once(self)
                 self.publisher_.publish(twist)
-                prev_distance = distance
+                if i % 30 == 0:
+                    prev_distance = distance
                 distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
                 if distance - prev_distance > 0.05:
                     rclpy.spin_once(self)
@@ -306,15 +310,15 @@ class AutoNav(Node):
         twist = Twist()
         try:
             if self.table == 6:
-                front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
-                tableAngleDeg = np.argmin(front180)
-                while front180[tableAngleDeg] > 0.75:
+                front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
+                lr2i = np.nanargmin(front140)
+                while front140[lr2i] > 0.75:
                     rclpy.spin_once(self)
                     twist.linear.x = 0.1
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
-                    front180 = self.laser_range[-90:-1] + self.laser_range[0:89]
-                    tableAngleDeg = np.argmin(front180)
+                    front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
+                    tableAngleDeg = np.nanargmin(front140)
                 tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
                 self.target_angle = tableAngleDeg
                 self.rotatebot(self.target_angle)
