@@ -266,7 +266,7 @@ class AutoNav(Node):
                 self.publisher_.publish(twist)
                 prev_distance = distance
                 distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
-                if distance > prev_distance:
+                if distance - prev_distance > 0.05:
                     rclpy.spin_once(self)
                     self.stopbot()
                     rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
