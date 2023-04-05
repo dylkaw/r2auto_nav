@@ -210,6 +210,19 @@ class AutoNav(Node):
     #     # stop the rotation
     #     self.publisher_.publish(twist)
 
+    def get_turn_direction(self, current_orientation, target_orientation):
+        diff = target_orientation - current_orientation
+        if diff > 180:
+            diff -= 360
+        elif diff <= -180:
+            diff += 360
+        if diff > 0:
+            return 1
+        elif diff < 0:
+            return -1
+        else:
+            return 0
+    
     def rotatebot(self, rot_angle):
         try:
             rclpy.spin_once(self)
@@ -217,17 +230,17 @@ class AutoNav(Node):
             twist.linear.x = 0.0
             # we are going to use complex numbers to avoid problems when the angles go from
             # 360 to 0, or from -180 to 180
-            curr_yaw = self.yaw
-            c_yaw = complex(math.cos(math.radians(curr_yaw)),math.sin(math.radians(curr_yaw)))
-            # calculate desired yaw
-            target_yaw = math.radians(curr_yaw) + math.radians(rot_angle)
-            # convert to complex notation
-            c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
-            # divide the two complex numbers to get the change in direction
-            c_change = c_target_yaw / c_yaw
-            # get the sign of the imaginary component to figure out which way we have to turn
-            c_change_dir = np.sign(c_change.imag)
-            twist.angular.z = 0.1 * c_change_dir
+            # curr_yaw = self.yaw
+            # c_yaw = complex(math.cos(math.radians(curr_yaw)),math.sin(math.radians(curr_yaw)))
+            # # calculate desired yaw
+            # target_yaw = math.radians(curr_yaw) + math.radians(rot_angle)
+            # # convert to complex notation
+            # c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
+            # # divide the two complex numbers to get the change in direction
+            # c_change = c_target_yaw / c_yaw
+            # # get the sign of the imaginary component to figure out which way we have to turn
+            # c_change_dir = np.sign(c_change.imag)
+            # twist.angular.z = 0.1 * c_change_dir
             # logic to determine turning direction
             # if (rot_angle > 0 and self.yaw > 0) or (rot_angle < 0 and self.yaw < 0):
             #     if rot_angle > self.yaw:
@@ -249,10 +262,11 @@ class AutoNav(Node):
             #     twist.angular.z = -0.1
             # else:
             #     twist.angular.z = 0.1
-
+            turn_dir = self.get_turn_direction(self.yaw, rot_angle)
+            twist.angular.z = 0.1 * turn_dir
             
-            self.get_logger().info(f'Desired angle: {rot_angle}')
             self.get_logger().info(f'Current angle: {self.yaw}')
+            self.get_logger().info(f'Desired angle: {rot_angle}')
             self.get_logger().info(f'Rotate Direction: {twist.angular.z}')
             while abs(self.yaw - rot_angle) > ANGLE_THRESHOLD:
                 self.publisher_.publish(twist)
