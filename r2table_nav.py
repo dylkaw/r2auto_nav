@@ -21,7 +21,7 @@ theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
 STOPPING_THRESHOLD = 0.2
-ANGLE_THRESHOLD = 0.25
+ANGLE_THRESHOLD = 0.4
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -242,7 +242,7 @@ class AutoNav(Node):
             while abs(self.yaw - rot_angle) > ANGLE_THRESHOLD:
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
-                # self.get_logger().info(f'Rotating to {rot_angle} from {self.yaw}')
+                self.get_logger().info(f'Rotating to {rot_angle} from {self.yaw}')
             twist.linear.x = 0.0
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
