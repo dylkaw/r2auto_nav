@@ -21,7 +21,7 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
-STOPPING_THRESHOLD = 0.4
+STOPPING_THRESHOLD = 0.375
 ANGLE_THRESHOLD = 0.5
 
 with open('waypoints.pickle', 'rb') as f:
@@ -161,19 +161,19 @@ class AutoNav(Node):
     #     current_yaw = self.yaw
     #     # log the info
     #     self.get_logger().info('Current: %f' % math.degrees(current_yaw))
-    #     # we are going to use complex numbers to avoid problems when the angles go from
-    #     # 360 to 0, or from -180 to 180
-    #     c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-    #     # calculate desired yaw
-    #     target_yaw = current_yaw + math.radians(rot_angle)
-    #     # convert to complex notation
-    #     c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
-    #     self.get_logger().info('Desired: %f' % math.degrees(cmath.phase(c_target_yaw)))
-    #     # divide the two complex numbers to get the change in direction
-    #     c_change = c_target_yaw / c_yaw
-    #     print("c_change: " + str(c_change))
-    #     # get the sign of the imaginary component to figure out which way we have to turn
-    #     c_change_dir = np.sign(c_change.imag)
+        # # we are going to use complex numbers to avoid problems when the angles go from
+        # # 360 to 0, or from -180 to 180
+        # c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
+        # # calculate desired yaw
+        # target_yaw = current_yaw + math.radians(rot_angle)
+        # # convert to complex notation
+        # c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
+        # self.get_logger().info('Desired: %f' % math.degrees(cmath.phase(c_target_yaw)))
+        # # divide the two complex numbers to get the change in direction
+        # c_change = c_target_yaw / c_yaw
+        # print("c_change: " + str(c_change))
+        # # get the sign of the imaginary component to figure out which way we have to turn
+        # c_change_dir = np.sign(c_change.imag)
     #     print("c_change_dir: " + str(c_change_dir))
     #     # set linear speed to zero so the TurtleBot rotates on the spot
     #     twist.linear.x = 0.0
@@ -215,28 +215,42 @@ class AutoNav(Node):
             rclpy.spin_once(self)
             twist = Twist()
             twist.linear.x = 0.0
-
+            # we are going to use complex numbers to avoid problems when the angles go from
+            # 360 to 0, or from -180 to 180
+            curr_yaw = self.yaw
+            c_yaw = complex(math.cos(math.radians(curr_yaw)),math.sin(math.radians(curr_yaw)))
+            # calculate desired yaw
+            target_yaw = math.radians(curr_yaw) + math.radians(rot_angle)
+            # convert to complex notation
+            c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
+            # divide the two complex numbers to get the change in direction
+            c_change = c_target_yaw / c_yaw
+            # get the sign of the imaginary component to figure out which way we have to turn
+            c_change_dir = np.sign(c_change.imag)
+            twist.angular.z = 0.1 * c_change_dir
             # logic to determine turning direction
-            if (rot_angle > 0 and self.yaw > 0) or (rot_angle < 0 and self.yaw < 0):
-                if rot_angle > self.yaw:
-                    twist.angular.z = 0.1
-                else:
-                    twist.angular.z = -0.1
-            elif (rot_angle < 0 and self.yaw > 0):
-                if abs(self.yaw - rot_angle) > 180:
-                    twist.angular.z = 0.1
-                else:
-                    twist.angular.z = -0.1
-            elif (rot_angle > 0 and self.yaw < 0):
-                if (rot_angle - self.yaw) > 180:
-                    twist.angular.z = 0.1
-                else:
-                    twist.angular.z = -0.1
+            # if (rot_angle > 0 and self.yaw > 0) or (rot_angle < 0 and self.yaw < 0):
+            #     if rot_angle > self.yaw:
+            #         twist.angular.z = 0.1
+            #     else:
+            #         twist.angular.z = -0.1
+            # elif (rot_angle < 0 and self.yaw > 0):
+            #     if abs(self.yaw - rot_angle) > 180:
+            #         twist.angular.z = 0.1
+            #     else:
+            #         twist.angular.z = -0.1
+            # elif (rot_angle > 0 and self.yaw < 0):
+            #     if (rot_angle - self.yaw) > 180:
+            #         twist.angular.z = 0.1
+            #     else:
+            #         twist.angular.z = -0.1
 
-            if (rot_angle - self.yaw < 0):
-                twist.angular.z = -0.1
-            else:
-                twist.angular.z = 0.1
+            # if (rot_angle - self.yaw < 0):
+            #     twist.angular.z = -0.1
+            # else:
+            #     twist.angular.z = 0.1
+
+            
             self.get_logger().info(f'Desired angle: {rot_angle}')
             self.get_logger().info(f'Current angle: {self.yaw}')
             self.get_logger().info(f'Rotate Direction: {twist.angular.z}')
@@ -299,7 +313,7 @@ class AutoNav(Node):
         twist = Twist()
         twist.linear.x = -0.1
         twist.angular.z = 0.0
-        end_time = datetime.now() + timedelta(seconds=3)
+        end_time = datetime.now() + timedelta(seconds=2)
         while datetime.now() < end_time:
             self.publisher_.publish(twist)
         self.stopbot()
