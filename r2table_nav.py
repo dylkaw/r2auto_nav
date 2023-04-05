@@ -7,6 +7,7 @@ from geometry_msgs.msg import Pose
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool, Int8, String
+from datetime import datetime, timedelta
 import numpy as np
 import pickle
 import math
@@ -20,8 +21,8 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
-STOPPING_THRESHOLD = 0.2
-ANGLE_THRESHOLD = 0.4
+STOPPING_THRESHOLD = 0.35
+ANGLE_THRESHOLD = 0.5
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -294,6 +295,15 @@ class AutoNav(Node):
 
     def nav_to_table(self):
         self.get_logger().info(f'Moving to table {self.table}!')
+        # Reverse out of dispenser
+        twist = Twist()
+        twist.linear.x = -0.1
+        twist.angular.z = 0.0
+        end_time = datetime.now() + timedelta(seconds=3)
+        while datetime.now() < end_time:
+            self.publisher_.publish(twist)
+        self.stopbot()
+
         for waypoint in waypoints[self.table]:
             self.goal_x = waypoint[0]
             self.goal_y = waypoint[1]
@@ -322,14 +332,17 @@ class AutoNav(Node):
                 tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
                 self.target_angle = tableAngleDeg
                 self.rotatebot(self.target_angle)
-                dist_to_table = self.laser_range[tableAngleDeg]
+                front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+                lr2i = np.nanargmin(front30)
+                dist_to_table = front30[lr2i]
                 while dist_to_table > STOPPING_THRESHOLD:
                     rclpy.spin_once(self)
-                    self.get_logger().info(f"Distance to table: {dist_to_table}")
-                    dist_to_table = self.laser_range[tableAngleDeg - 90]
+                    self.get_logger().info(f"Distance to table: {front30[lr2i]}")
                     twist.linear.x = 0.1
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
+                    front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+                    lr2i = np.nanargmin(front30)
 
             else:
                 rclpy.spin_once(self)
@@ -409,7 +422,7 @@ class AutoNav(Node):
                 rclpy.spin_once(self)
                 table_no = int(input("Enter table number:"))
                 rclpy.spin_once(self)
-                # if self.has_can:
+            if self.has_can:
                     # while self.table == 0:
                     #     rclpy.spin_once(self)
                     #     self.get_logger().info('Waiting for table number...')
@@ -421,8 +434,8 @@ class AutoNav(Node):
                 self.return_home()
                 print("ending...")
                     # break
-                # else:
-                #     self.get_logger().info("No can!")
+            else:
+                self.get_logger().info("No can!")
         finally:
             self.stopbot()
 
