@@ -21,7 +21,7 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
-STOPPING_THRESHOLD = 0.35
+STOPPING_THRESHOLD = 0.4
 ANGLE_THRESHOLD = 0.5
 
 with open('waypoints.pickle', 'rb') as f:
@@ -271,7 +271,7 @@ class AutoNav(Node):
                 if i % 30 == 0:
                     prev_distance = distance
                 distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
-                if distance - prev_distance > 0.05:
+                if distance - prev_distance > 0.04:
                     rclpy.spin_once(self)
                     self.stopbot()
                     rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
