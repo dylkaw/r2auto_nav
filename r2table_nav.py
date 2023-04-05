@@ -264,7 +264,20 @@ class AutoNav(Node):
             while distance >= WAYPOINT_THRESHOLD:
                 rclpy.spin_once(self)
                 self.publisher_.publish(twist)
+                prev_distance = distance
                 distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
+                if distance > prev_distance:
+                    rclpy.spin_once(self)
+                    self.stopbot()
+                    rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
+                    # print(f"HIIIIIIIIII {rot_angle}")
+                    self.target_angle = rot_angle
+                    self.rotatebot(self.target_angle)
+                    twist.angular.z = 0.0
+                    twist.linear.x = 0.1
+                    self.publisher_.publish(twist)
+
+
                 self.get_logger().info('Distance: %f' % (distance))
 
             self.get_logger().info('Reached goal')
