@@ -482,7 +482,7 @@ class AutoNav(Node):
     
         if self.ir_status == 'L':
             self.get_logger().info("Detected left!")
-            end_time = datetime.now() + timedelta(seconds=2)
+            end_time = datetime.now() + timedelta(seconds=2.25)
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
@@ -501,7 +501,7 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         elif self.ir_status == 'R':
             self.get_logger().info("Detected right!")
-            end_time = datetime.now() + timedelta(seconds=2)
+            end_time = datetime.now() + timedelta(seconds=2.25)
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
@@ -519,17 +519,17 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         self.stopbot()
 
-        front60 = np.append(self.laser_range[-30:-1], self.laser_range[0:29])
-        print(front60)
-        lr2i = np.nanargmin(front60)
-        while front60[lr2i] > 0.20:
+        front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+        print(front30)
+        lr2i = np.nanargmin(front30)
+        while front30[lr2i] > 0.15:
             rclpy.spin_once(self)
-            self.get_logger().info(f"Distance to Dispenser: {front60[lr2i]}")
+            self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
             twist.linear.x = 0.05
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
-            front60 = np.append(self.laser_range[-30:-1], self.laser_range[0:29])
-            lr2i = np.nanargmin(front60)
+            front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+            lr2i = np.nanargmin(front30)
         self.stopbot()
 
         self.publisher_.publish(twist)
