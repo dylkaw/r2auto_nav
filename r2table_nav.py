@@ -150,6 +150,7 @@ class AutoNav(Node):
 
     def infra_callback(self, msg):
         self.ir_status = msg.data
+        print(f'pub: {self.ir_status}')
 
     # function to rotate the TurtleBot
     # def rotatebot(self, rot_angle):
