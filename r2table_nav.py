@@ -486,9 +486,11 @@ class AutoNav(Node):
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
+            time.sleep(5)
             while self.ir_status != 'F':
+                self.get_logger().info("not F")
                 twist.linear.x = 0.0
-                twist.angular.z = 0.1
+                twist.angular.z = 0.05
                 self.publisher_.publish(twist)
             self.get_logger().info("Docking!")  
         elif self.ir_status == 'R':
@@ -498,8 +500,9 @@ class AutoNav(Node):
                 self.publisher_.publish(twist)
             self.stopbot()
             while self.ir_status != 'F':
+                self.get_logger().info("not F")
                 twist.linear.x = 0.0
-                twist.angular.z = -0.1
+                twist.angular.z = -0.05
                 self.publisher_.publish(twist)
             self.get_logger().info("Docking!")  
         self.stopbot()
