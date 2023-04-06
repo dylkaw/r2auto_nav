@@ -486,14 +486,21 @@ class AutoNav(Node):
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
-            self.rotatebot(self.yaw + 90)
+            while self.ir_status != 'F':
+                twist.linear.x = 0.0
+                twist.angular.z = 0.1
+            self.get_logger().info("Docking!")  
         elif self.ir_status == 'R':
             self.get_logger().info("Detected right!")
             end_time = datetime.now() + timedelta(seconds=2)
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
-            self.rotatebot(self.yaw + 270)
+            while self.ir_status != 'F':
+                twist.linear.x = 0.0
+                twist.angular.z = -0.1
+            self.get_logger().info("Docking!")  
+        self.stopbot()
 
         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
         lr2i = np.nanargmin(front30)
