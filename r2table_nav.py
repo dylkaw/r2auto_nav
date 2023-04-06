@@ -111,7 +111,7 @@ class AutoNav(Node):
         self.can_subscription  # prevent unused variable warning
 
         self.infra_subscription = self.create_subscription(
-            Int8,
+            String,
             'infra_pub',
             self.infra_callback,
             10)
