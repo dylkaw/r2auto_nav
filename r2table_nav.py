@@ -357,14 +357,14 @@ class AutoNav(Node):
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
                     front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
-                    tableAngleDeg = np.nanargmin(front140)
-                to_angle = self.yaw + tableAngleDeg
+                    lr2i = np.nanargmin(front140)
+                to_angle = self.yaw + lr2i
                 if to_angle < -180:
                     to_angle = 180 + (to_angle % 180)
                 elif to_angle > 180:
                     to_angle = (to_angle % 180) - 180
 
-                self.target_angle = tableAngleDeg
+                self.target_angle = lr2i
                 self.rotatebot(self.target_angle)
                 front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
                 lr2i = np.nanargmin(front30)
