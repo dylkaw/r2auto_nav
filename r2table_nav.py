@@ -529,6 +529,8 @@ class AutoNav(Node):
             self.publisher_.publish(twist)
             front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
             lr2i = np.nanargmin(front30)
+        print(lr2i)
+        print(front30)
         self.stopbot()
 
         self.publisher_.publish(twist)
