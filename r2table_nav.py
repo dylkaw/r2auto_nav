@@ -504,16 +504,16 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         self.stopbot()
 
-        front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-        lr2i = np.nanargmin(front30)
-        while front30[lr2i] > STOPPING_THRESHOLD:
+        front60 = np.append(self.laser_range[-30:-1], self.laser_range[0:29])
+        lr2i = np.nanargmin(front60)
+        while front60[lr2i] > 0.20:
             rclpy.spin_once(self)
-            self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
+            self.get_logger().info(f"Distance to Dispenser: {front60[lr2i]}")
             twist.linear.x = 0.05
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
-            front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-            lr2i = np.nanargmin(front30)
+            front60 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+            lr2i = np.nanargmin(front60)
         self.stopbot()
 
         self.publisher_.publish(twist)
