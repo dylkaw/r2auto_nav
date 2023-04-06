@@ -493,7 +493,7 @@ class AutoNav(Node):
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
-            self.rotatebot(self.yaw - 90)
+            self.rotatebot(self.yaw + 270)
 
         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
         lr2i = np.nanargmin(front30)
