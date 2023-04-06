@@ -486,13 +486,17 @@ class AutoNav(Node):
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
-            time.sleep(5)
-            while self.ir_status != 'F':
-                self.get_logger().info("not F")
-                rclpy.spin_once(self)
-                twist.linear.x = 0.0
-                twist.angular.z = 0.05
-                self.publisher_.publish(twist)
+            # time.sleep(5)
+            # while self.ir_status != 'F':
+            #     self.get_logger().info("not F")
+            #     rclpy.spin_once(self)
+            #     twist.linear.x = 0.0
+            #     twist.angular.z = 0.05
+            #     self.publisher_.publish(twist)
+            to_angle = self.yaw + 90
+            if to_angle > 180:
+                to_angle = (to_angle % 180) - 180
+            self.rotatebot(to_angle)
             self.stopbot()
             self.get_logger().info("Docking!")  
         elif self.ir_status == 'R':
@@ -501,17 +505,22 @@ class AutoNav(Node):
             while datetime.now() < end_time:
                 self.publisher_.publish(twist)
             self.stopbot()
-            while self.ir_status != 'F':
-                self.get_logger().info("not F")
-                rclpy.spin_once(self)
-                twist.linear.x = 0.0
-                twist.angular.z = -0.05
-                self.publisher_.publish(twist)
+            # while self.ir_status != 'F':
+            #     self.get_logger().info("not F")
+            #     rclpy.spin_once(self)
+            #     twist.linear.x = 0.0
+            #     twist.angular.z = -0.05
+            #     self.publisher_.publish(twist)
+            to_angle = self.yaw - 90
+            if to_angle < -180:
+                to_angle = 180 + (to_angle % 180)
+            self.rotatebot(self.yaw - 90)
             self.stopbot()
             self.get_logger().info("Docking!")  
         self.stopbot()
 
         front60 = np.append(self.laser_range[-30:-1], self.laser_range[0:29])
+        print(front60)
         lr2i = np.nanargmin(front60)
         while front60[lr2i] > 0.20:
             rclpy.spin_once(self)
@@ -519,7 +528,7 @@ class AutoNav(Node):
             twist.linear.x = 0.05
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
-            front60 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+            front60 = np.append(self.laser_range[-30:-1], self.laser_range[0:29])
             lr2i = np.nanargmin(front60)
         self.stopbot()
 
