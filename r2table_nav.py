@@ -65,7 +65,7 @@ class AutoNav(Node):
         self.table = 0
         self.laser_range = np.array([])
         self.has_can = False
-        self.ir_status = 0
+        self.ir_status = ''
 
         # create publisher for moving TurtleBot
         self.publisher_ = self.create_publisher(Twist,'cmd_vel',10)
@@ -480,10 +480,12 @@ class AutoNav(Node):
         self.stopbot()
     
         if self.ir_status == 'L':
+            self.get_logger().info("Detected left!")
             time.sleep(2.5)
             self.stopbot()
             self.rotatebot(270)
         elif self.ir_status == 'R':
+            self.get_logger().info("Detected right!")
             time.sleep(2.5)
             self.stopbot()
             self.rotatebot(90)
