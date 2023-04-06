@@ -489,6 +489,7 @@ class AutoNav(Node):
             while self.ir_status != 'F':
                 twist.linear.x = 0.0
                 twist.angular.z = 0.1
+                self.publisher_.publish(twist)
             self.get_logger().info("Docking!")  
         elif self.ir_status == 'R':
             self.get_logger().info("Detected right!")
@@ -499,6 +500,7 @@ class AutoNav(Node):
             while self.ir_status != 'F':
                 twist.linear.x = 0.0
                 twist.angular.z = -0.1
+                self.publisher_.publish(twist)
             self.get_logger().info("Docking!")  
         self.stopbot()
 
