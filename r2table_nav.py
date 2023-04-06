@@ -418,6 +418,7 @@ class AutoNav(Node):
                 #     twist.angular.z = 0.0
                 #     self.publisher_.publish(twist)
         except Exception as e:
+            print(e)
             self.stopbot()
             self.destroy_node()
             rclpy.shutdown()
