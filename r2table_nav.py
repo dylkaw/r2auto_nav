@@ -520,9 +520,8 @@ class AutoNav(Node):
         self.stopbot()
 
         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-        print(front30)
         lr2i = np.nanargmin(front30)
-        while front30[lr2i] > 0.15:
+        while front30[lr2i] > 0.05:
             rclpy.spin_once(self)
             self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
             twist.linear.x = 0.05
