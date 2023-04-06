@@ -358,7 +358,12 @@ class AutoNav(Node):
                     self.publisher_.publish(twist)
                     front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
                     tableAngleDeg = np.nanargmin(front140)
-                tableAngleDeg = 360 - (90 - tableAngleDeg) if tableAngleDeg > 180 else tableAngleDeg - 90
+                to_angle = self.yaw + tableAngleDeg
+                if to_angle < -180:
+                    to_angle = 180 + (to_angle % 180)
+                elif to_angle > 180:
+                    to_angle = (to_angle % 180) - 180
+
                 self.target_angle = tableAngleDeg
                 self.rotatebot(self.target_angle)
                 front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
@@ -451,20 +456,20 @@ class AutoNav(Node):
                 rclpy.spin_once(self)
                 table_no = int(input("Enter table number:"))
                 rclpy.spin_once(self)
-                if self.has_can:
+                # if self.has_can:
                         # while self.table == 0:
                         #     rclpy.spin_once(self)
                         #     self.get_logger().info('Waiting for table number...')
-                    self.table = table_no
-                    self.nav_to_table()
-                    self.target_angle = math.degrees(self.end_yaw)
-                    self.rotatebot(self.target_angle)
-                    self.get_close_to_table()
-                    self.return_home()
-                    print("ending...")
+                self.table = table_no
+                self.nav_to_table()
+                self.target_angle = math.degrees(self.end_yaw)
+                self.rotatebot(self.target_angle)
+                self.get_close_to_table()
+                self.return_home()
+                print("ending...")
                         # break
-                else:
-                    self.get_logger().info("No can!")
+                # else:
+                #     self.get_logger().info("No can!")
         finally:
             self.stopbot()
 
@@ -521,7 +526,7 @@ class AutoNav(Node):
 
         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
         lr2i = np.nanargmin(front30)
-        while front30[lr2i] > 0.05:
+        while front30[lr2i] > 0.1:
             rclpy.spin_once(self)
             self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
             twist.linear.x = 0.05
@@ -538,7 +543,8 @@ class AutoNav(Node):
 def main(args = None):
     rclpy.init(args = args)
     auto_nav = AutoNav()
-    auto_nav.dock()
+    auto_nav.mover()
+    # auto_nav.dock()
     auto_nav.destroy_node()
     rclpy.shutdown()
 
