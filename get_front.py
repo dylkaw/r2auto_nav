@@ -44,17 +44,21 @@ class AutoNav(Node):
         # np.savetxt(scanfile, self.laser_range)
         # replace 0's with nan
         self.laser_range[self.laser_range==0] = np.nan
+        lr2i = np.nanargmin(self.laser_range)
+        print(lr2i)
+        print(self.laser_range[lr2i])
 
-    def get_distance(self):
-        while True:
-            front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-            lr2i = np.nanargmin(front30)
-            print(front30[lr2i])
+    # def get_distance(self):
+    #     while True:
+    #         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+    #         lr2i = np.nanargmin(front30)
+    #         print(front30[lr2i])
 
 def main(args = None):
     rclpy.init(args = args)
     auto_nav = AutoNav()
-    auto_nav.get_distance()
+    rclpy.spin(auto_nav)
+    # auto_nav.get_distance()
     auto_nav.destroy_node()
     rclpy.shutdown()
 
