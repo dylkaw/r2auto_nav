@@ -480,8 +480,12 @@ class AutoNav(Node):
         self.stopbot()
     
         if self.ir_status == 'L':
+            time.sleep(2.5)
+            self.stopbot()
             self.rotatebot(270)
         elif self.ir_status == 'R':
+            time.sleep(2.5)
+            self.stopbot()
             self.rotatebot(90)
 
         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
@@ -501,7 +505,7 @@ class AutoNav(Node):
 def main(args = None):
     rclpy.init(args = args)
     auto_nav = AutoNav()
-    auto_nav.mover()
+    auto_nav.dock()
     auto_nav.destroy_node()
     rclpy.shutdown()
 
