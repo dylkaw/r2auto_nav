@@ -477,7 +477,7 @@ class AutoNav(Node):
             twist.angular.z = 0.0
             self.publisher_.publish(twist)
             rclpy.spin_once(self)
-        self.stopbot()
+        # self.stopbot()
     
         if self.ir_status == 'L':
             self.get_logger().info("Detected left!")
