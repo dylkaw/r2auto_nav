@@ -351,18 +351,18 @@ class AutoNav(Node):
             if self.table == 6:
                 front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
                 lr2i = np.nanargmin(front140)
-                while front140[lr2i] > 0.75:
+                while front140[lr2i] > 0.5:
                     rclpy.spin_once(self)
                     twist.linear.x = 0.1
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
                     front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
-                    lr2i = np.nanargmin(front140)
-                to_angle = self.yaw + lr2i
+
+                to_angle = lr2i
                 if to_angle < -180:
-                    to_angle = 180 + (to_angle % 180)
+                    to_angle = to_angle + 360
                 elif to_angle > 180:
-                    to_angle = (to_angle % 180) - 180
+                    to_angle = to_angle - 360
 
                 self.target_angle = lr2i
                 self.rotatebot(self.target_angle)
