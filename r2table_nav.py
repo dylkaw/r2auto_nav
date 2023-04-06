@@ -482,14 +482,14 @@ class AutoNav(Node):
     
         if self.ir_status == 'L':
             self.get_logger().info("Detected left!")
-            time.sleep(2.5)
+            time.sleep(5)
             self.stopbot()
-            self.rotatebot(270)
+            self.rotatebot(self.yaw - 90)
         elif self.ir_status == 'R':
             self.get_logger().info("Detected right!")
-            time.sleep(2.5)
+            time.sleep(5)
             self.stopbot()
-            self.rotatebot(90)
+            self.rotatebot(90 + self.yaw)
 
         front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
         lr2i = np.nanargmin(front30)
