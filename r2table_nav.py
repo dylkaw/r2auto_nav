@@ -489,6 +489,7 @@ class AutoNav(Node):
             time.sleep(5)
             while self.ir_status != 'F':
                 self.get_logger().info("not F")
+                self.get_logger().info(self.ir_status)
                 twist.linear.x = 0.0
                 twist.angular.z = 0.05
                 self.publisher_.publish(twist)
@@ -502,6 +503,7 @@ class AutoNav(Node):
             self.stopbot()
             while self.ir_status != 'F':
                 self.get_logger().info("not F")
+                self.get_logger().info(self.ir_status)
                 twist.linear.x = 0.0
                 twist.angular.z = -0.05
                 self.publisher_.publish(twist)
