@@ -152,65 +152,6 @@ class AutoNav(Node):
         self.ir_status = msg.data
         print(f'pub: {self.ir_status}')
 
-    # function to rotate the TurtleBot
-    # def rotatebot(self, rot_angle):
-    #     # self.get_logger().info('In rotatebot')
-    #     # create Twist object
-    #     twist = Twist()
-        
-    #     # get current yaw angle
-    #     current_yaw = self.yaw
-    #     # log the info
-    #     self.get_logger().info('Current: %f' % math.degrees(current_yaw))
-        # # we are going to use complex numbers to avoid problems when the angles go from
-        # # 360 to 0, or from -180 to 180
-        # c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-        # # calculate desired yaw
-        # target_yaw = current_yaw + math.radians(rot_angle)
-        # # convert to complex notation
-        # c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
-        # self.get_logger().info('Desired: %f' % math.degrees(cmath.phase(c_target_yaw)))
-        # # divide the two complex numbers to get the change in direction
-        # c_change = c_target_yaw / c_yaw
-        # print("c_change: " + str(c_change))
-        # # get the sign of the imaginary component to figure out which way we have to turn
-        # c_change_dir = np.sign(c_change.imag)
-    #     print("c_change_dir: " + str(c_change_dir))
-    #     # set linear speed to zero so the TurtleBot rotates on the spot
-    #     twist.linear.x = 0.0
-    #     print("linear.x = 0")
-    #     # set the direction to rotate
-        
-    #     twist.angular.z = c_change_dir * 0.1
-    #     print("c_change_dir: " + str(c_change_dir))
-    #     # start rotation
-    #     self.publisher_.publish(twist)
-
-    #     print("published twist")
-    #     # we will use the c_dir_diff variable to see if we can stop rotating
-    #     c_dir_diff = c_change_dir
-    #     # self.get_logger().info('c_change_dir: %f c_dir_diff: %f' % (c_change_dir, c_dir_diff))
-    #     # if the rotation direction was 1.0, then we will want to stop when the c_dir_diff
-    #     # becomes -1.0, and vice versa
-    #     while(c_change_dir * c_dir_diff > 0):
-    #         # allow the callback functions to run
-    #         rclpy.spin_once(self)
-    #         current_yaw = self.yaw
-    #         # convert the current yaw to complex form
-    #         c_yaw = complex(math.cos(current_yaw),math.sin(current_yaw))
-    #         self.get_logger().info('Current Yaw: %f' % math.degrees(current_yaw))
-    #         # get difference in angle between current and target
-    #         c_change = c_target_yaw / c_yaw
-    #         # get the sign to see if we can stop
-    #         c_dir_diff = np.sign(c_change.imag)
-    #         # self.get_logger().info('c_change_dir: %f c_dir_diff: %f' % (c_change_dir, c_dir_diff))
-
-    #     self.get_logger().info('End Yaw: %f' % math.degrees(current_yaw))
-    #     # set the rotation speed to 0
-    #     twist.angular.z = 0.0
-    #     # stop the rotation
-    #     self.publisher_.publish(twist)
-
     def get_turn_direction(self, current_orientation, target_orientation):
         diff = target_orientation - current_orientation
         if diff > 180:
@@ -301,10 +242,10 @@ class AutoNav(Node):
                     prev_distance = distance
                 distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
                 if distance - prev_distance > 0.03:
+                    self.get_logger().info('Recalibrating...')
                     rclpy.spin_once(self)
                     self.stopbot()
                     rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
-                    # print(f"HIIIIIIIIII {rot_angle}")
                     self.target_angle = rot_angle
                     self.rotatebot(self.target_angle)
                     twist.angular.z = 0.0
@@ -372,7 +313,7 @@ class AutoNav(Node):
                 while dist_to_table > STOPPING_THRESHOLD:
                     rclpy.spin_once(self)
                     self.get_logger().info(f"Distance to table: {front30[lr2i]}")
-                    twist.linear.x = 0.1
+                    twist.linear.x = 0.05
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
                     front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
@@ -393,7 +334,7 @@ class AutoNav(Node):
                 while front30[lr2i] > STOPPING_THRESHOLD:
                     rclpy.spin_once(self)
                     self.get_logger().info(f"Distance to table: {front30[lr2i]}")
-                    twist.linear.x = 0.1
+                    twist.linear.x = 0.05
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
                     front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
@@ -467,6 +408,7 @@ class AutoNav(Node):
                 self.rotatebot(self.target_angle)
                 self.get_close_to_table()
                 self.return_home()
+                self.dock()
                 print("ending...")
                         # break
                 # else:
@@ -525,21 +467,28 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         self.stopbot()
 
-        front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-        lr2i = np.nanargmin(front30)
-        while front30[lr2i] > 0.1:
-            rclpy.spin_once(self)
-            self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
-            twist.linear.x = 0.05
-            twist.angular.z = 0.0
+        twist.linear.x = 0.05
+        twist.angular.z = 0.0
+        end_time = datetime.now() + timedelta(seconds=4)
+        while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-            lr2i = np.nanargmin(front30)
-        print(lr2i)
-        print(front30)
         self.stopbot()
 
-        self.publisher_.publish(twist)
+        # front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+        # lr2i = np.nanargmin(front30)
+        # while front30[lr2i] > 0.1:
+        #     rclpy.spin_once(self)
+        #     self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
+        #     twist.linear.x = 0.05
+        #     twist.angular.z = 0.0
+        #     self.publisher_.publish(twist)
+        #     front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
+        #     lr2i = np.nanargmin(front30)
+        # print(lr2i)
+        # print(front30)
+        # self.stopbot()
+
+        # self.publisher_.publish(twist)
 
 def main(args = None):
     rclpy.init(args = args)
