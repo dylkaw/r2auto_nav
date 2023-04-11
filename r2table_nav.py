@@ -129,7 +129,11 @@ class AutoNav(Node):
         client.subscribe(MQTT_TOPIC_TABLE)
 
     def on_message(self, client, userdata, msg):
-        print(msg.topic + ' ' + str(msg.payload))
+        val = str(msg.payload.decode('utf-8'))
+        if val in ['1','2','3','4','5','6']:
+            self.table = int(val)
+            print(f'saved table {self.table}')
+        print(msg.topic + ' ' + val)
 
     def connect_to_mqtt(self):
         print('Connecting...')
