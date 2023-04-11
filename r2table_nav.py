@@ -430,9 +430,9 @@ class AutoNav(Node):
     
         if self.ir_status == 'L':
             self.get_logger().info("Detected left!")
-            end_time = datetime.now() + timedelta(seconds=2.25)
-            while datetime.now() < end_time:
-                self.publisher_.publish(twist)
+            # end_time = datetime.now() + timedelta(seconds=2.25)
+            # while datetime.now() < end_time:
+            self.publisher_.publish(twist)
             self.stopbot()
             # time.sleep(5)
             # while self.ir_status != 'F':
@@ -449,9 +449,9 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         elif self.ir_status == 'R':
             self.get_logger().info("Detected right!")
-            end_time = datetime.now() + timedelta(seconds=2.25)
-            while datetime.now() < end_time:
-                self.publisher_.publish(twist)
+            # end_time = datetime.now() + timedelta(seconds=2.25)
+            # while datetime.now() < end_time:
+            self.publisher_.publish(twist)
             self.stopbot()
             # while self.ir_status != 'F':
             #     self.get_logger().info("not F")
