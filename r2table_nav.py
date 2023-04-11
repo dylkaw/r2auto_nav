@@ -431,7 +431,7 @@ class AutoNav(Node):
                 self.return_home()
                 self.dock()
                 print("ending...")
-                        # break
+                break
                 # else:
                 #     self.get_logger().info("No can!")
         finally:
@@ -495,8 +495,6 @@ class AutoNav(Node):
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
             time.sleep(4.2)
-            self.stopbot()
-            self.stopbot()
             self.stopbot()
             self.stopbot()
             self.table = 0
