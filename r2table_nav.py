@@ -467,7 +467,7 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         self.stopbot()
 
-        twist.linear.x = 0.05
+        twist.linear.x = 0.03
         twist.angular.z = 0.0
         end_time = datetime.now() + timedelta(seconds=3)
         while datetime.now() < end_time:
