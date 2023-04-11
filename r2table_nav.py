@@ -21,7 +21,7 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
-STOPPING_THRESHOLD = 0.375
+STOPPING_THRESHOLD = 0.35
 ANGLE_THRESHOLD = 0.5
 
 with open('waypoints.pickle', 'rb') as f:
@@ -398,9 +398,10 @@ class AutoNav(Node):
                 rclpy.spin_once(self)
                 table_no = int(input("Enter table number:"))
                 rclpy.spin_once(self)
-                # if self.has_can:
+                while not self.has_can:
                         # while self.table == 0:
-                        #     rclpy.spin_once(self)
+                    rclpy.spin_once(self)
+                    self.get_logger().info('Waiting for can...')
                         #     self.get_logger().info('Waiting for table number...')
                 self.table = table_no
                 self.nav_to_table()
@@ -431,7 +432,7 @@ class AutoNav(Node):
         
             if self.ir_status == 'L':
                 self.get_logger().info("Detected left!")
-                end_time = datetime.now() + timedelta(seconds=2)
+                end_time = datetime.now() + timedelta(seconds=2.25)
                 while datetime.now() < end_time:
                     self.publisher_.publish(twist)
                 self.stopbot()
@@ -450,7 +451,7 @@ class AutoNav(Node):
                 self.get_logger().info("Docking!")  
             elif self.ir_status == 'R':
                 self.get_logger().info("Detected right!")
-                end_time = datetime.now() + timedelta(seconds=2)
+                end_time = datetime.now() + timedelta(seconds=2.25)
                 while datetime.now() < end_time:
                     self.publisher_.publish(twist)
                 self.stopbot()
@@ -473,9 +474,7 @@ class AutoNav(Node):
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            time.sleep(4.5)
-            self.stopbot()
-            self.stopbot()
+            time.sleep(4.4)
             self.stopbot()
             self.stopbot()
         finally:
@@ -500,8 +499,8 @@ class AutoNav(Node):
 def main(args = None):
     rclpy.init(args = args)
     auto_nav = AutoNav()
-    # auto_nav.mover()
-    auto_nav.dock()
+    auto_nav.mover()
+    # auto_nav.dock()
     # auto_nav.destroy_node()
     rclpy.shutdown()
 
