@@ -134,7 +134,7 @@ class AutoNav(Node):
     def connect_to_mqtt(self):
         print('Connecting...')
         self.mqttclient.connect(MQTT_ADDRESS, 1883)
-        self.mqtt_client.loop_forever()
+        self.mqttclient.loop_forever()
 
     def map2base_callback(self, msg):
         # self.get_logger().info('In map2basecallback')
