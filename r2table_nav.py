@@ -15,7 +15,8 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool, Int8, String
 from datetime import datetime, timedelta
 
-MQTT_ADDRESS = '192.168.43.213' #YJ's ubuntu IP
+# MQTT_ADDRESS = '192.168.43.213'
+MQTT_ADDRESS = '172.20.10.8'
 #MQTT_USER = 'neo'
 #MQTT_PASSWORD = 'eglabs'
 MQTT_TOPIC_DOCK = 'dock'
