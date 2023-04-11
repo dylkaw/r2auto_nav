@@ -444,7 +444,7 @@ class AutoNav(Node):
             twist = Twist()
             while self.ir_status == '':
                 self.get_logger().info("Searching for ir emitter")
-                twist.linear.x = 0.03
+                twist.linear.x = 0.02
                 twist.angular.z = 0.0
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
