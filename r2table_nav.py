@@ -1,6 +1,12 @@
 import rclpy
 from rclpy.node import Node
 import geometry_msgs.msg
+import paho.mqtt.client as mqtt
+import numpy as np
+import pickle
+import math
+import cmath
+import time
 from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
@@ -8,15 +14,12 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool, Int8, String
 from datetime import datetime, timedelta
-import numpy as np
-import pickle
-import math
-import cmath
-import time
 
-
-rotatechange = 0.1
-speedchange = 0.1
+MQTT_ADDRESS = '192.168.43.213' #YJ's ubuntu IP
+#MQTT_USER = 'neo'
+#MQTT_PASSWORD = 'eglabs'
+MQTT_TOPIC_DOCK = 'dock'
+MQTT_TOPIC_TABLE = 'table'
 rot_q = 0.0 
 theta = 0.0
 scanfile = 'lidar.txt'
@@ -66,6 +69,9 @@ class AutoNav(Node):
         self.laser_range = np.array([])
         self.has_can = False
         self.ir_status = ''
+        self.mqttclient = mqtt.Client()
+        self.mqttclient.on_connect = self.on_connect
+        self.mqttclient.on_message = self.on_message
 
         # create publisher for moving TurtleBot
         self.publisher_ = self.create_publisher(Twist,'cmd_vel',10)
@@ -116,6 +122,19 @@ class AutoNav(Node):
             self.infra_callback,
             10)
         self.infra_subscription
+    
+    def on_connect(self, client, userdata, flags, rc):
+        print('Connected with result code ' + str(rc))
+        client.subscribe(MQTT_TOPIC_DOCK)
+        client.subscribe(MQTT_TOPIC_TABLE)
+
+    def on_message(self, client, userdata, msg):
+        print(msg.topic + ' ' + str(msg.payload))
+
+    def connect_to_mqtt(self):
+        print('Connecting...')
+        self.mqttclient.connect(MQTT_ADDRESS, 1883)
+        self.mqtt_client.loop_forever()
 
     def map2base_callback(self, msg):
         # self.get_logger().info('In map2basecallback')
@@ -501,7 +520,7 @@ def main(args = None):
     rclpy.init(args = args)
     auto_nav = AutoNav()
     # auto_nav.mover()
-    auto_nav.dock()
+    auto_nav.connect_to_mqtt()
     # auto_nav.destroy_node()
     rclpy.shutdown()
 
