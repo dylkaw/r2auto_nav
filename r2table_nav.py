@@ -467,9 +467,9 @@ class AutoNav(Node):
             self.get_logger().info("Docking!")  
         self.stopbot()
 
-        twist.linear.x = 0.03
+        twist.linear.x = 0.025
         twist.angular.z = 0.0
-        end_time = datetime.now() + timedelta(seconds=3)
+        end_time = datetime.now() + timedelta(seconds=2.5)
         while datetime.now() < end_time:
             self.publisher_.publish(twist)
         self.stopbot()
