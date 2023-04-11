@@ -24,7 +24,7 @@ rot_q = 0.0
 theta = 0.0
 scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
-STOPPING_THRESHOLD = 0.375
+STOPPING_THRESHOLD = 0.35
 ANGLE_THRESHOLD = 0.5
 
 with open('waypoints.pickle', 'rb') as f:
@@ -452,7 +452,7 @@ class AutoNav(Node):
         
             if self.ir_status == 'L':
                 self.get_logger().info("Detected left!")
-                end_time = datetime.now() + timedelta(seconds=2)
+                end_time = datetime.now() + timedelta(seconds=2.25)
                 while datetime.now() < end_time:
                     self.publisher_.publish(twist)
                 self.stopbot()
@@ -471,7 +471,7 @@ class AutoNav(Node):
                 self.get_logger().info("Docking!")  
             elif self.ir_status == 'R':
                 self.get_logger().info("Detected right!")
-                end_time = datetime.now() + timedelta(seconds=2)
+                end_time = datetime.now() + timedelta(seconds=2.25)
                 while datetime.now() < end_time:
                     self.publisher_.publish(twist)
                 self.stopbot()
@@ -494,7 +494,7 @@ class AutoNav(Node):
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            time.sleep(4.2)
+            time.sleep(4.4)
             self.stopbot()
             self.stopbot()
             self.table = 0
