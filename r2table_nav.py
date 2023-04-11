@@ -469,7 +469,7 @@ class AutoNav(Node):
 
         twist.linear.x = 0.05
         twist.angular.z = 0.0
-        end_time = datetime.now() + timedelta(seconds=4)
+        end_time = datetime.now() + timedelta(seconds=2)
         while datetime.now() < end_time:
             self.publisher_.publish(twist)
         self.stopbot()
@@ -493,9 +493,9 @@ class AutoNav(Node):
 def main(args = None):
     rclpy.init(args = args)
     auto_nav = AutoNav()
-    auto_nav.mover()
-    # auto_nav.dock()
-    auto_nav.destroy_node()
+    # auto_nav.mover()
+    auto_nav.dock()
+    # auto_nav.destroy_node()
     rclpy.shutdown()
 
 
