@@ -418,61 +418,64 @@ class AutoNav(Node):
 
     def dock(self):
         #TODO wall following thing
-        rclpy.spin_once(self)
-        twist = Twist()
-        while self.ir_status == '':
-            self.get_logger().info("Searching for ir emitter")
-            twist.linear.x = 0.05
-            twist.angular.z = 0.0
-            self.publisher_.publish(twist)
+        try:
             rclpy.spin_once(self)
-        # self.stopbot()
-    
-        if self.ir_status == 'L':
-            self.get_logger().info("Detected left!")
-            end_time = datetime.now() + timedelta(seconds=1)
-            while datetime.now() < end_time:
+            twist = Twist()
+            while self.ir_status == '':
+                self.get_logger().info("Searching for ir emitter")
+                twist.linear.x = 0.05
+                twist.angular.z = 0.0
                 self.publisher_.publish(twist)
+                rclpy.spin_once(self)
+            # self.stopbot()
+        
+            if self.ir_status == 'L':
+                self.get_logger().info("Detected left!")
+                end_time = datetime.now() + timedelta(seconds=1)
+                while datetime.now() < end_time:
+                    self.publisher_.publish(twist)
+                self.stopbot()
+                # time.sleep(5)
+                # while self.ir_status != 'F':
+                #     self.get_logger().info("not F")
+                #     rclpy.spin_once(self)
+                #     twist.linear.x = 0.0
+                #     twist.angular.z = 0.05
+                #     self.publisher_.publish(twist)
+                to_angle = self.yaw + 90
+                if to_angle > 180:
+                    to_angle = (to_angle % 180) - 180
+                self.rotatebot(to_angle)
+                self.stopbot()
+                self.get_logger().info("Docking!")  
+            elif self.ir_status == 'R':
+                self.get_logger().info("Detected right!")
+                end_time = datetime.now() + timedelta(seconds=1)
+                while datetime.now() < end_time:
+                    self.publisher_.publish(twist)
+                self.stopbot()
+                # while self.ir_status != 'F':
+                #     self.get_logger().info("not F")
+                #     rclpy.spin_once(self)
+                #     twist.linear.x = 0.0
+                #     twist.angular.z = -0.05
+                #     self.publisher_.publish(twist)
+                to_angle = self.yaw - 90
+                if to_angle < -180:
+                    to_angle = 180 + (to_angle % 180)
+                self.rotatebot(self.yaw - 90)
+                self.stopbot()
+                self.get_logger().info("Docking!")  
             self.stopbot()
-            # time.sleep(5)
-            # while self.ir_status != 'F':
-            #     self.get_logger().info("not F")
-            #     rclpy.spin_once(self)
-            #     twist.linear.x = 0.0
-            #     twist.angular.z = 0.05
-            #     self.publisher_.publish(twist)
-            to_angle = self.yaw + 90
-            if to_angle > 180:
-                to_angle = (to_angle % 180) - 180
-            self.rotatebot(to_angle)
-            self.stopbot()
-            self.get_logger().info("Docking!")  
-        elif self.ir_status == 'R':
-            self.get_logger().info("Detected right!")
-            end_time = datetime.now() + timedelta(seconds=1)
-            while datetime.now() < end_time:
-                self.publisher_.publish(twist)
-            self.stopbot()
-            # while self.ir_status != 'F':
-            #     self.get_logger().info("not F")
-            #     rclpy.spin_once(self)
-            #     twist.linear.x = 0.0
-            #     twist.angular.z = -0.05
-            #     self.publisher_.publish(twist)
-            to_angle = self.yaw - 90
-            if to_angle < -180:
-                to_angle = 180 + (to_angle % 180)
-            self.rotatebot(self.yaw - 90)
-            self.stopbot()
-            self.get_logger().info("Docking!")  
-        self.stopbot()
 
-        twist.linear.x = 0.025
-        twist.angular.z = 0.0
-        end_time = datetime.now() + timedelta(seconds=2.5)
-        while datetime.now() < end_time:
-            self.publisher_.publish(twist)
-        self.stopbot()
+            twist.linear.x = 0.025
+            twist.angular.z = 0.0
+            end_time = datetime.now() + timedelta(seconds=2.5)
+            while datetime.now() < end_time:
+                self.publisher_.publish(twist)
+            self.stopbot()
+        finally:
+            self.stopbot()
 
         # front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
         # lr2i = np.nanargmin(front30)
