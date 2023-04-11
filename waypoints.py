@@ -15,7 +15,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Pose
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
@@ -79,17 +79,26 @@ class Waypoint(Node):
         super().__init__('waypoint')
         
         # create subscription to track orientation
-        self.odom_subscription = self.create_subscription(
-            Odometry,
-            'odom',
-            self.odom_callback,
-            10)
-        # self.get_logger().info('Created subscriber')
-        self.odom_subscription  # prevent unused variable warning
+        # self.odom_subscription = self.create_subscription(
+        #     Odometry,
+        #     'odom',
+        #     self.odom_callback,
+        #     10)
+        # # self.get_logger().info('Created subscriber')
+        # self.odom_subscription  # prevent unused variable warning
+        self.map2base_sub = self.create_subscription(
+            Pose,
+            'map2base',
+            self.map2base_callback,
+            1)
+        self.map2base_sub # prevent unused variable warning
         # initialize variables
         self.roll = 0
         self.pitch = 0
         self.yaw = 0
+        self.orien = 0
+        self.x = 0
+        self.y = 0
 
     # def occ_callback(self, msg):
     #     # create numpy array
@@ -157,30 +166,17 @@ class Waypoint(Node):
     #     	# stop moving
     #         print('waypoint mapping completed')
 
+    def map2base_callback(self, msg):
+        # self.get_logger().info('In map2basecallback')
+        self.x, self.y = msg.position.x, msg.position.y
+        self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
 
-
-    def odom_callback(self, msg):
-        # self.get_logger().info('In odom_callback')
-        inp = input("Enter input")
-        if inp == "w":
-            numbers = int(input("Enter table numbers:"))
-            print("saving")
-            orien =  msg.pose.pose.orientation
-            px = msg.pose.pose.position.x
-            py = msg.pose.pose.position.y
-            roll, pitch, yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
-            # self.get_logger().info(orien)
-            while numbers != 0:
-                num = numbers % 10
-                numbers = (numbers // 10)
-                data = (px, py, roll, pitch, yaw)
-                waypoints[num].append(data)
-            print(waypoints)
-
-        elif inp == "s":
-            print("saving...")
-            with open('waypoints.pickle', 'wb') as handle:
-                pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # def odom_callback(self, msg):
+    #     # self.get_logger().info('In odom_callback')
+    #     self.orien = msg.pose.pose.orientation
+    #     self.x = msg.pose.pose.position.x
+    #     self.y = msg.pose.pose.position.y
+            
 
 def main(args=None):
     rclpy.init(args=args)
@@ -189,7 +185,29 @@ def main(args=None):
         waypoint = Waypoint()
         start = input("Press s to start")
         if start == "s":
-            rclpy.spin(waypoint)
+            rclpy.spin_once(waypoint)
+        while True:
+            inp = input("Enter input")
+            if inp == "w":
+                numbers = int(input("Enter table numbers:"))
+                rclpy.spin_once(waypoint)
+                print("saving")
+                # roll, pitch, yaw = euler_from_quaternion(waypoint.orien.x, waypoint.orien.y, waypoint.orien.z, waypoint.orien.w)
+                # self.get_logger().info(orien)
+                while numbers != 0:
+                    num = numbers % 10
+                    numbers = (numbers // 10)
+                    data = (waypoint.x, waypoint.y, waypoint.roll, waypoint.pitch, waypoint.yaw)
+                    waypoints[num].append(data)
+                print(waypoints)
+
+            elif inp == "s":
+                print("saving...")
+                with open('waypoints.pickle', 'wb') as handle:
+                    pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                waypoint.destroy_node()
+                rclpy.shutdown()
+                break
 
     except KeyboardInterrupt:
         waypoint.destroy_node()
