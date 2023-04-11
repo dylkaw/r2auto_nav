@@ -472,8 +472,8 @@ class AutoNav(Node):
             twist.angular.z = 0.0
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
-            time.sleep(2.5)
             self.publisher_.publish(twist)
+            time.sleep(2.5)
             self.stopbot()
             self.stopbot()
             self.stopbot()
