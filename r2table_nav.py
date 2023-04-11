@@ -417,17 +417,13 @@ class AutoNav(Node):
         # time.sleep(1)
         self.publisher_.publish(twist)
 
-    def mover(self):
+    def mover(self, table):
         try:
             while rclpy.ok():
                 rclpy.spin_once(self)
-                table_no = int(input("Enter table number:"))
-                rclpy.spin_once(self)
-                # if self.has_can:
-                        # while self.table == 0:
-                        #     rclpy.spin_once(self)
-                        #     self.get_logger().info('Waiting for table number...')
-                self.table = table_no
+                while not self.has_can:
+                    rclpy.spin_once(self)
+                    self.get_logger().info('Waiting for can...')
                 self.nav_to_table()
                 self.target_angle = math.degrees(self.end_yaw)
                 self.rotatebot(self.target_angle)
@@ -498,11 +494,12 @@ class AutoNav(Node):
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            time.sleep(4.5)
+            time.sleep(4.2)
             self.stopbot()
             self.stopbot()
             self.stopbot()
             self.stopbot()
+            self.table = 0
         finally:
             self.stopbot()
 
