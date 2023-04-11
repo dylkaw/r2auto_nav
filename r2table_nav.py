@@ -134,7 +134,7 @@ class AutoNav(Node):
             if val in ['1','2','3','4','5','6']:
                 self.table = int(val)
                 print(f'Received table {self.table}')
-                self.dock()
+                self.mover()
         print(msg.topic + ' ' + val)
 
     def connect_to_mqtt(self):
@@ -417,7 +417,7 @@ class AutoNav(Node):
         # time.sleep(1)
         self.publisher_.publish(twist)
 
-    def mover(self, table):
+    def mover(self):
         try:
             while rclpy.ok():
                 rclpy.spin_once(self)
