@@ -130,9 +130,11 @@ class AutoNav(Node):
 
     def on_message(self, client, userdata, msg):
         val = str(msg.payload.decode('utf-8'))
-        if val in ['1','2','3','4','5','6']:
-            self.table = int(val)
-            print(f'saved table {self.table}')
+        if msg.topic == 'table' and self.table == 0:
+            if val in ['1','2','3','4','5','6']:
+                self.table = int(val)
+                print(f'Received table {self.table}')
+                self.dock()
         print(msg.topic + ' ' + val)
 
     def connect_to_mqtt(self):
