@@ -232,7 +232,7 @@ class AutoNav(Node):
             # else:
             #     twist.angular.z = 0.1
             turn_dir = self.get_turn_direction(self.yaw, rot_angle)
-            twist.angular.z = 0.4 * turn_dir
+            twist.angular.z = 0.2 * turn_dir
             
             self.get_logger().info(f'Current angle: {self.yaw}')
             self.get_logger().info(f'Desired angle: {rot_angle}')
