@@ -238,6 +238,8 @@ class AutoNav(Node):
             self.get_logger().info(f'Desired angle: {rot_angle}')
             self.get_logger().info(f'Rotate Direction: {twist.angular.z}')
             while abs(self.yaw - rot_angle) > ANGLE_THRESHOLD:
+                if (self.yaw - rot_angle - ANGLE_THRESHOLD) < 10:
+                    twist.angular.z = 0.1
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
                 self.get_logger().info(f'Rotating to {rot_angle} from {self.yaw}')
@@ -326,7 +328,7 @@ class AutoNav(Node):
                     self.publisher_.publish(twist)
                     front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
 
-                to_angle = lr2i
+                to_angle = lr2i - 70
                 if to_angle < -180:
                     to_angle = to_angle + 360
                 elif to_angle > 180:
@@ -497,7 +499,7 @@ class AutoNav(Node):
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            time.sleep(5)
+            time.sleep(5.5)
             self.stopbot()
             self.stopbot()
             self.table = 0
