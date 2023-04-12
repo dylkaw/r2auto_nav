@@ -27,6 +27,7 @@ scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
 STOPPING_THRESHOLD = 0.35
 ANGLE_THRESHOLD = 0.5
+LINEAR_SPEED = 0.15
 
 with open('waypoints.pickle', 'rb') as f:
     waypoints = pickle.load(f)
@@ -231,7 +232,7 @@ class AutoNav(Node):
             # else:
             #     twist.angular.z = 0.1
             turn_dir = self.get_turn_direction(self.yaw, rot_angle)
-            twist.angular.z = 0.1 * turn_dir
+            twist.angular.z = 0.4 * turn_dir
             
             self.get_logger().info(f'Current angle: {self.yaw}')
             self.get_logger().info(f'Desired angle: {rot_angle}')
@@ -255,7 +256,7 @@ class AutoNav(Node):
             twist = Twist()
             # Start moving
             twist.angular.z = 0.0
-            twist.linear.x = 0.1
+            twist.linear.x = LINEAR_SPEED
             distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
             self.get_logger().info('Initial Distance: %f' % (distance))
             prev_distance = distance
@@ -275,7 +276,7 @@ class AutoNav(Node):
                     self.target_angle = rot_angle
                     self.rotatebot(self.target_angle)
                     twist.angular.z = 0.0
-                    twist.linear.x = 0.1
+                    twist.linear.x = LINEAR_SPEED
                     self.publisher_.publish(twist)
 
 
@@ -331,7 +332,7 @@ class AutoNav(Node):
                 elif to_angle > 180:
                     to_angle = to_angle - 360
 
-                self.target_angle = lr2i
+                self.target_angle = to_angle
                 self.rotatebot(self.target_angle)
                 front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
                 lr2i = np.nanargmin(front30)
@@ -495,7 +496,7 @@ class AutoNav(Node):
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            time.sleep(4.4)
+            time.sleep(4.5)
             self.stopbot()
             self.stopbot()
             self.table = 0
