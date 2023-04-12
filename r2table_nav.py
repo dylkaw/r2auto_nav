@@ -329,7 +329,8 @@ class AutoNav(Node):
                     twist.angular.z = 0.0
                     self.publisher_.publish(twist)
                     front140 = np.append(self.laser_range[-70:-1], self.laser_range[0:69])
-
+                    lr2i = np.nanargmin(front140)
+                    
                 to_angle = lr2i - 70
                 if to_angle < -180:
                     to_angle = to_angle + 360
