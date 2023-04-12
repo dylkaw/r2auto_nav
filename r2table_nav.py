@@ -496,7 +496,7 @@ class AutoNav(Node):
             # end_time = datetime.now() + timedelta(seconds=2.5)
             # while datetime.now() < end_time:
             self.publisher_.publish(twist)
-            time.sleep(4.5)
+            time.sleep(5)
             self.stopbot()
             self.stopbot()
             self.table = 0
