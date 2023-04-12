@@ -232,14 +232,16 @@ class AutoNav(Node):
             # else:
             #     twist.angular.z = 0.1
             turn_dir = self.get_turn_direction(self.yaw, rot_angle)
-            twist.angular.z = 0.2 * turn_dir
+            twist.angular.z = 0.4 * turn_dir
             
             self.get_logger().info(f'Current angle: {self.yaw}')
             self.get_logger().info(f'Desired angle: {rot_angle}')
             self.get_logger().info(f'Rotate Direction: {twist.angular.z}')
             while abs(self.yaw - rot_angle) > ANGLE_THRESHOLD:
-                if (self.yaw - rot_angle - ANGLE_THRESHOLD) < 10:
-                    twist.angular.z = 0.1
+                if (self.yaw - rot_angle - ANGLE_THRESHOLD) < 20:
+                    twist.angular.z = 0.1 * turn_dir
+                else:
+                    twist.angular.z = 0.4 * turn_dir
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
                 self.get_logger().info(f'Rotating to {rot_angle} from {self.yaw}')
