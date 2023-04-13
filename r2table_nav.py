@@ -238,7 +238,7 @@ class AutoNav(Node):
             self.get_logger().info(f'Desired angle: {rot_angle}')
             self.get_logger().info(f'Rotate Direction: {twist.angular.z}')
             while abs(self.yaw - rot_angle) > ANGLE_THRESHOLD:
-                if (self.yaw - rot_angle - ANGLE_THRESHOLD) < 20:
+                if (abs(self.yaw - rot_angle) - ANGLE_THRESHOLD) < 20:
                     twist.angular.z = 0.1 * turn_dir
                 else:
                     twist.angular.z = 0.4 * turn_dir
@@ -305,7 +305,11 @@ class AutoNav(Node):
             self.publisher_.publish(twist)
         self.stopbot()
 
+        dock_point = True
         for waypoint in waypoints[self.table]:
+            if dock_point:
+                dock_point = False
+                continue
             self.goal_x = waypoint[0]
             self.goal_y = waypoint[1]
             self.end_yaw = waypoint[4]
