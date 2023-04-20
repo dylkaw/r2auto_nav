@@ -28,6 +28,7 @@ setup(
             'r2auto_nav = auto_nav.r2auto_nav:main',
             'waypoints = auto_nav.waypoints:main',
             'r2table_nav = auto_nav.r2table_nav:main'
+            'map2base = auto_nav.map2base:main'
         ],
     },
 )
