@@ -21,7 +21,7 @@ class CanPub(Node):
     def __init__(self):
         super().__init__('can_pub')
         self.publisher_ = self.create_publisher(Bool, 'can_pub', 10)
-        timer_period = 0.5  # seconds
+        timer_period = 0.2  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
     def timer_callback(self):
@@ -30,9 +30,9 @@ class CanPub(Node):
         if weight < THRESHOLD:
             msg.data = False
         else:
-            msg.data = True 
+            msg.data = True
         self.publisher_.publish(msg)
-        self.get_logger().info(f'Weight reading: "{msg.data}"')
+        self.get_logger().info(f'Has can: "{msg.data}"')
 
 def main(args=None):
     # input("place can to calibrate load")
@@ -52,6 +52,6 @@ def main(args=None):
     canPub.destroy_node()
     rclpy.shutdown()
 
-
 if __name__ == '__main__':
     main()
+

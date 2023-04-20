@@ -85,13 +85,6 @@ class AutoNav(Node):
             qos_profile_sensor_data)
         self.scan_subscription  # prevent unused variable warning
 
-        self.table_subscription = self.create_subscription(
-            String,
-            'table_pub',
-            self.table_callback,
-            10)
-        self.table_subscription
-
         self.can_subscription = self.create_subscription(
             Bool,
             'can_pub',
@@ -135,11 +128,6 @@ class AutoNav(Node):
         self.laser_range = np.array(msg.ranges)
         # replace 0's with nan
         self.laser_range[self.laser_range==0] = np.nan
-
-    def table_callback(self, msg):
-        if self.has_can:
-            self.table = int(msg.data)
-            print('received table number!')
 
     def can_callback(self, msg):
         # print(msg.data)

@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import rclpy
 import time
 from rclpy.node import Node
-from std_msgs.msg import Int8
+from std_msgs.msg import String
 
 
 # Set up GPIO
@@ -18,27 +18,33 @@ class InfraPub(Node):
 
     def __init__(self):
         super().__init__('infra_pub')
-        self.publisher_ = self.create_publisher(Int8, 'infra_pub', 10)
-        timer_period = 0.5  # seconds
+        self.publisher_ = self.create_publisher(String, 'infra_pub', 10)
+        timer_period = 0.05  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.val = ''
+        self.count = 0
 
     def timer_callback(self):
-        msg = Int8()
-        val = 0
+        msg = String()
         if GPIO.input(23) == GPIO.LOW:
             print("L  IR signal detected")
-            val += 1
+            self.val = 'L'
+            self.count = 0
             time.sleep(0.2) # Debounce time
-
-        if GPIO.input(24) == GPIO.LOW:
+        elif GPIO.input(24) == GPIO.LOW:
             print("R  IR signal detected")
-            val += 10
+            self.val = 'R'
+            self.count = 0 
             time.sleep(0.2) # Debounce time
-
-        if GPIO.input(25) == GPIO.LOW:
+        elif GPIO.input(25) == GPIO.LOW:
             print("F  IR signal detected")
-            val += 100
+            self.val = 'F'
             time.sleep(0.2) # Debounce time
+        msg.data = self.val
+        if self.count == 50:
+            self.count = 0
+            self.val = ''
+        self.count += 1
         self.publisher_.publish(msg)
         self.get_logger().info(f'IR Readings: "{msg.data}"')
 
