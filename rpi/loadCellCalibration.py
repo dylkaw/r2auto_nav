@@ -13,9 +13,9 @@ print(reading)
 known_weight_grams = input('Enter the known weight in grams & press Enter: ')
 value = float(known_weight_grams)
 
-#ratio = 1795.584848484
+ratio = reading/value
 hx.set_scale_ratio(ratio)
-print(reading/value)
+print(ratio)
 
 while True:
         print('hi')

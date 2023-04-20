@@ -3,7 +3,6 @@ import rclpy
 from rclpy.node import Node
 from hx711 import HX711
 from std_msgs.msg import Bool
-import time
 
 THRESHOLD = 200
 RATIO = 1795.584848484
