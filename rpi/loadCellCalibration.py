@@ -18,7 +18,6 @@ hx.set_scale_ratio(ratio)
 print(ratio)
 
 while True:
-        print('hi')
         weight = hx.get_weight_mean()
         print(weight)
 
