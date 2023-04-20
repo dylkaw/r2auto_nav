@@ -14,19 +14,13 @@
 
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist, Pose
-from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import LaserScan
-from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Pose
 import tf2_ros
-from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 import numpy as np
 import math
 import cmath
 import time
 import pickle
-import scipy.stats
 
 # constants
 rotatechange = 0.1
@@ -63,29 +57,8 @@ def euler_from_quaternion(x, y, z, w):
     return roll_x, pitch_y, yaw_z # in radians
     
 class Waypoint(Node):
-
-    # def __init__(self):
-    #     super().__init__('waypoint')
-    #     self.occ_subscription = self.create_subscription(
-    #         OccupancyGrid,
-    #         'map',
-    #         self.occ_callback,
-    #         qos_profile_sensor_data)
-    #     self.occ_subscription  # prevent unused variable warning
-    #     self.tfBuffer = tf2_ros.Buffer()
-    #     self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
-
     def __init__(self):
         super().__init__('waypoint')
-        
-        # create subscription to track orientation
-        # self.odom_subscription = self.create_subscription(
-        #     Odometry,
-        #     'odom',
-        #     self.odom_callback,
-        #     10)
-        # # self.get_logger().info('Created subscriber')
-        # self.odom_subscription  # prevent unused variable warning
         self.map2base_sub = self.create_subscription(
             Pose,
             'map2base',
@@ -100,83 +73,10 @@ class Waypoint(Node):
         self.x = 0
         self.y = 0
 
-    # def occ_callback(self, msg):
-    #     # create numpy array
-    #     inp = str(input("enter input:"))
-    #     if inp == "w":
-    #         occdata = np.array(msg.data)
-    #         # compute histogram to identify bins with -1, values between 0 and below 50, 
-    #         # and values between 50 and 100. The binned_statistic function will also
-    #         # return the bin numbers so we can use that easily to create the image 
-    #         occ_counts, edges, binnum = scipy.stats.binned_statistic(occdata, np.nan, statistic='count', bins=occ_bins)
-    #         # get width and height of map
-    #         iwidth = msg.info.width
-    #         iheight = msg.info.height
-    #         # calculate total number of bins
-    #         total_bins = iwidth * iheight
-    #         # log the info
-    #         # self.get_logger().info('Unmapped: %i Unoccupied: %i Occupied: %i Total: %i' % (occ_counts[0], occ_counts[1], occ_counts[2], total_bins))
-
-    #         # find transform to obtain base_link coordinates in the map frame
-    #         # lookup_transform(target_frame, source_frame, time)
-    #         try:
-    #             trans = self.tfBuffer.lookup_transform('map', 'base_link', rclpy.time.Time())
-    #         except (LookupException, ConnectivityException, ExtrapolationException) as e:
-    #             self.get_logger().info('No transformation found')
-    #             return
-                
-    #         cur_pos = trans.transform.translation
-    #         cur_rot = trans.transform.rotation
-    #         self.get_logger().info('Trans: %f, %f' % (cur_pos.x, cur_pos.y))
-    #         # convert quaternion to Euler angles
-    #         roll, pitch, yaw = euler_from_quaternion(cur_rot.x, cur_rot.y, cur_rot.z, cur_rot.w)
-    #         self.get_logger().info('Rot-Yaw: R: %f D: %f' % (yaw, np.degrees(yaw)))
-    #         numbers = int(input("Enter table numbers:"))
-    #         while numbers != 0:
-    #             num = numbers % 10
-    #             numbers = (numbers // 10)
-    #             data = (cur_pos.x, cur_pos.y, roll, pitch, yaw)
-    #             waypoints[num].append(data)
-    #         print(waypoints)
-
-    #     elif inp == "s":
-    #         print("exporting pickle")
-    #         with open('waypoints.pickle', 'wb') as handle:
-    #             pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-    # def readKey(self):
-    #     try:
-    #         while True:
-    #             cmd_char = str(input("w to save waypoint, s to export pickle"))
-    #             if cmd_char == "w":
-    #                 print("saving waypoint")
-    #                 rclpy.spin_once(self)
-                
-    #             elif cmd_char == "s":
-    #                 print("exporting pickle")
-    #                 with open('waypoints.pickle', 'wb') as handle:
-    #                     pickle.dump(waypoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        
-    #     except Exception as e:
-    #         print(e)
-            
-	# 	# Ctrl-c detected
-    #     finally:
-    #     	# stop moving
-    #         print('waypoint mapping completed')
-
     def map2base_callback(self, msg):
         # self.get_logger().info('In map2basecallback')
         self.x, self.y = msg.position.x, msg.position.y
         self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
-
-    # def odom_callback(self, msg):
-    #     # self.get_logger().info('In odom_callback')
-    #     self.orien = msg.pose.pose.orientation
-    #     self.x = msg.pose.pose.position.x
-    #     self.y = msg.pose.pose.position.y
-            
 
 def main(args=None):
     rclpy.init(args=args)
@@ -187,13 +87,11 @@ def main(args=None):
         if start == "s":
             rclpy.spin_once(waypoint)
         while True:
-            inp = input("Enter input")
+            inp = input("Enter input: 'w' to save waypoint, 's' to save waypoint file and exit")
             if inp == "w":
                 numbers = int(input("Enter table numbers:"))
                 rclpy.spin_once(waypoint)
                 print("saving")
-                # roll, pitch, yaw = euler_from_quaternion(waypoint.orien.x, waypoint.orien.y, waypoint.orien.z, waypoint.orien.w)
-                # self.get_logger().info(orien)
                 while numbers != 0:
                     num = numbers % 10
                     numbers = (numbers // 10)

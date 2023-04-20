@@ -1,29 +1,20 @@
 import rclpy
 from rclpy.node import Node
-import geometry_msgs.msg
 import paho.mqtt.client as mqtt
 import numpy as np
 import pickle
 import math
 import cmath
 import time
-from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import Bool, Int8, String
+from std_msgs.msg import Bool, String
 from datetime import datetime, timedelta
 
-# MQTT_ADDRESS = '192.168.43.213'
-MQTT_ADDRESS = '172.20.10.8'
-#MQTT_USER = 'neo'
-#MQTT_PASSWORD = 'eglabs'
-MQTT_TOPIC_DOCK = 'dock'
+MQTT_ADDRESS = '172.20.10.8' # Change according to MQTT Broker IP
 MQTT_TOPIC_TABLE = 'table'
-rot_q = 0.0 
-theta = 0.0
-scanfile = 'lidar.txt'
 WAYPOINT_THRESHOLD = 0.04
 STOPPING_THRESHOLD = 0.35
 ANGLE_THRESHOLD = 0.5
@@ -78,17 +69,7 @@ class AutoNav(Node):
         # create publisher for moving TurtleBot
         self.publisher_ = self.create_publisher(Twist,'cmd_vel',10)
         # self.get_logger().info('Created publisher')
-        
-        # create subscription to track orientation
-        # self.odom_subscription = self.create_subscription(
-        #     Odometry,
-        #     'odom',
-        #     self.odom_callback,
-        #     10)
-        # self.odom_subscription
-        # self.get_logger().info('Created subscriber')
-        # initialize variables
-
+ 
         # create subscription for map2base
         self.map2base_sub = self.create_subscription(
             Pose,
@@ -127,7 +108,6 @@ class AutoNav(Node):
     
     def on_connect(self, client, userdata, flags, rc):
         print('Connected with result code ' + str(rc))
-        client.subscribe(MQTT_TOPIC_DOCK)
         client.subscribe(MQTT_TOPIC_TABLE)
 
     def on_message(self, client, userdata, msg):
@@ -149,19 +129,10 @@ class AutoNav(Node):
         self.px, self.py = msg.position.x, msg.position.y
         _, _, self.yaw = euler_from_quaternion(msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
     
-    # def odom_callback(self, msg):
-    #     # self.get_logger().info('In odom_callback')
-    #     orien =  msg.pose.pose.orientation
-    #     pos = msg.pose.pose.position
-    #     _, _, self.yaw = euler_from_quaternion(orien.x, orien.y, orien.z, orien.w)
-    #     self.px, self.py = pos.x, pos.y
-
     def scan_callback(self, msg):
         # self.get_logger().info('In scan_callback')
         # create numpy array
         self.laser_range = np.array(msg.ranges)
-        # print to file
-        # np.savetxt(scanfile, self.laser_range)
         # replace 0's with nan
         self.laser_range[self.laser_range==0] = np.nan
 
@@ -169,7 +140,6 @@ class AutoNav(Node):
         if self.has_can:
             self.table = int(msg.data)
             print('received table number!')
-
 
     def can_callback(self, msg):
         # print(msg.data)
@@ -197,40 +167,6 @@ class AutoNav(Node):
             rclpy.spin_once(self)
             twist = Twist()
             twist.linear.x = 0.0
-            # we are going to use complex numbers to avoid problems when the angles go from
-            # 360 to 0, or from -180 to 180
-            # curr_yaw = self.yaw
-            # c_yaw = complex(math.cos(math.radians(curr_yaw)),math.sin(math.radians(curr_yaw)))
-            # # calculate desired yaw
-            # target_yaw = math.radians(curr_yaw) + math.radians(rot_angle)
-            # # convert to complex notation
-            # c_target_yaw = complex(math.cos(target_yaw),math.sin(target_yaw))
-            # # divide the two complex numbers to get the change in direction
-            # c_change = c_target_yaw / c_yaw
-            # # get the sign of the imaginary component to figure out which way we have to turn
-            # c_change_dir = np.sign(c_change.imag)
-            # twist.angular.z = 0.1 * c_change_dir
-            # logic to determine turning direction
-            # if (rot_angle > 0 and self.yaw > 0) or (rot_angle < 0 and self.yaw < 0):
-            #     if rot_angle > self.yaw:
-            #         twist.angular.z = 0.1
-            #     else:
-            #         twist.angular.z = -0.1
-            # elif (rot_angle < 0 and self.yaw > 0):
-            #     if abs(self.yaw - rot_angle) > 180:
-            #         twist.angular.z = 0.1
-            #     else:
-            #         twist.angular.z = -0.1
-            # elif (rot_angle > 0 and self.yaw < 0):
-            #     if (rot_angle - self.yaw) > 180:
-            #         twist.angular.z = 0.1
-            #     else:
-            #         twist.angular.z = -0.1
-
-            # if (rot_angle - self.yaw < 0):
-            #     twist.angular.z = -0.1
-            # else:
-            #     twist.angular.z = 0.1
             turn_dir = self.get_turn_direction(self.yaw, rot_angle)
             twist.angular.z = 0.4 * turn_dir
             
@@ -239,20 +175,17 @@ class AutoNav(Node):
             self.get_logger().info(f'Rotate Direction: {twist.angular.z}')
             while abs(self.yaw - rot_angle) > ANGLE_THRESHOLD:
                 if (abs(self.yaw - rot_angle) - ANGLE_THRESHOLD) < 20:
+                    # Turn slower when nearing angle
                     twist.angular.z = 0.1 * turn_dir
                 else:
                     twist.angular.z = 0.4 * turn_dir
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
                 self.get_logger().info(f'Rotating to {rot_angle} from {self.yaw}')
-            twist.linear.x = 0.0
-            twist.angular.z = 0.0
-            self.publisher_.publish(twist)
+            self.stopbot()
             self.get_logger().info('Rotated to target angle')
         finally:
-            twist.linear.x = 0.0
-            twist.angular.z = 0.0
-            self.publisher_.publish(twist)
+            self.stopbot()
 
     def move_to_point(self):
         try:
@@ -272,6 +205,7 @@ class AutoNav(Node):
                 if i % 30 == 0:
                     prev_distance = distance
                 distance = math.sqrt(math.pow(self.goal_x - self.px, 2) + math.pow(self.goal_y - self.py, 2))
+                # If delivery robot is off target, recalculate movement direction
                 if distance - prev_distance > 0.03:
                     self.get_logger().info('Recalibrating...')
                     rclpy.spin_once(self)
@@ -282,7 +216,6 @@ class AutoNav(Node):
                     twist.angular.z = 0.0
                     twist.linear.x = LINEAR_SPEED
                     self.publisher_.publish(twist)
-
 
                 self.get_logger().info('Distance: %f' % (distance))
 
@@ -307,6 +240,7 @@ class AutoNav(Node):
 
         dock_point = True
         for waypoint in waypoints[self.table]:
+            # Skip docking point when moving to table
             if dock_point:
                 dock_point = False
                 continue
@@ -314,7 +248,6 @@ class AutoNav(Node):
             self.goal_y = waypoint[1]
             self.end_yaw = waypoint[4]
             rot_angle = math.degrees(math.atan2(self.goal_y - self.py, self.goal_x - self.px))
-            # print(f"HIIIIIIIIII {rot_angle}")
             self.target_angle = rot_angle
             self.rotatebot(self.target_angle)
             self.move_to_point()
@@ -358,14 +291,6 @@ class AutoNav(Node):
 
             else:
                 rclpy.spin_once(self)
-                # min_dist_angle = np.nanargmin(self.laser_range)
-                # while self.laser_range[min_dist_angle] > STOPPING_THRESHOLD:
-                #     twist.linear.x = 0.1
-                #     twist.angular.z = 0.0
-                #     self.publisher_.publish(twist)
-                #     self.get_logger().info(f"Distance to table: {self.laser_range[min_dist_angle]}")
-                #     rclpy.spin_once(self)
-                #     min_dist_angle = np.nanargmin
                 front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
                 lr2i = np.nanargmin(front30)
                 while front30[lr2i] > STOPPING_THRESHOLD:
@@ -376,25 +301,7 @@ class AutoNav(Node):
                     self.publisher_.publish(twist)
                     front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
                     lr2i = np.nanargmin(front30)
-                # front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
-                # self.get_logger().info(f"min 360: {np.argmin(self.laser_range)}, min 30: {np.argmin(front30)}")
-                # tableAngleDeg = np.argmin(front30)
-                # if tableAngleDeg > 15:
-                #     tableAngleDeg = tableAngleDeg - 15
-                # else:
-                #     360 - (15 - tableAngleDeg)
-                # self.get_logger().info(f"curr_yaw: {self.yaw}, deg: {tableAngleDeg}")
-                # self.target_angle = tableAngleDeg
-                # self.rotatebot(self.target_angle - math.degrees(self.yaw))
-                # dist_to_table = self.laser_range[tableAngleDeg]
-                # while dist_to_table > STOPPING_THRESHOLD:
-                #     rclpy.spin_once(self)
-                #     self.get_logger().info(f"Distance to table: {dist_to_table}")
-                #     front30 = self.laser_range[-15:-1] + self.laser_range[0:14]
-                #     dist_to_table = np.min(front30)
-                #     twist.linear.x = 0.1
-                #     twist.angular.z = 0.0
-                #     self.publisher_.publish(twist)
+
         except Exception as e:
             print(e)
             self.stopbot()
@@ -443,14 +350,10 @@ class AutoNav(Node):
                 self.return_home()
                 self.dock()
                 print("ending...")
-                break
-                # else:
-                #     self.get_logger().info("No can!")
         finally:
             self.stopbot()
 
     def dock(self):
-        #TODO wall following thing
         try:
             rclpy.spin_once(self)
             twist = Twist()
@@ -460,7 +363,6 @@ class AutoNav(Node):
                 twist.angular.z = 0.0
                 self.publisher_.publish(twist)
                 rclpy.spin_once(self)
-            # self.stopbot()
         
             if self.ir_status == 'L':
                 self.get_logger().info("Detected left!")
@@ -468,13 +370,6 @@ class AutoNav(Node):
                 while datetime.now() < end_time:
                     self.publisher_.publish(twist)
                 self.stopbot()
-                # time.sleep(5)
-                # while self.ir_status != 'F':
-                #     self.get_logger().info("not F")
-                #     rclpy.spin_once(self)
-                #     twist.linear.x = 0.0
-                #     twist.angular.z = 0.05
-                #     self.publisher_.publish(twist)
                 to_angle = self.yaw + 90
                 if to_angle > 180:
                     to_angle = (to_angle % 180) - 180
@@ -487,12 +382,6 @@ class AutoNav(Node):
                 while datetime.now() < end_time:
                     self.publisher_.publish(twist)
                 self.stopbot()
-                # while self.ir_status != 'F':
-                #     self.get_logger().info("not F")
-                #     rclpy.spin_once(self)
-                #     twist.linear.x = 0.0
-                #     twist.angular.z = -0.05
-                #     self.publisher_.publish(twist)
                 to_angle = self.yaw - 90
                 if to_angle < -180:
                     to_angle = 180 + (to_angle % 180)
@@ -503,8 +392,6 @@ class AutoNav(Node):
 
             twist.linear.x = 0.03
             twist.angular.z = 0.0
-            # end_time = datetime.now() + timedelta(seconds=2.5)
-            # while datetime.now() < end_time:
             self.publisher_.publish(twist)
             time.sleep(5.5)
             self.stopbot()
@@ -512,22 +399,6 @@ class AutoNav(Node):
             self.table = 0
         finally:
             self.stopbot()
-
-        # front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-        # lr2i = np.nanargmin(front30)
-        # while front30[lr2i] > 0.1:
-        #     rclpy.spin_once(self)
-        #     self.get_logger().info(f"Distance to Dispenser: {front30[lr2i]}")
-        #     twist.linear.x = 0.05
-        #     twist.angular.z = 0.0
-        #     self.publisher_.publish(twist)
-        #     front30 = np.append(self.laser_range[-15:-1], self.laser_range[0:14])
-        #     lr2i = np.nanargmin(front30)
-        # print(lr2i)
-        # print(front30)
-        # self.stopbot()
-
-        # self.publisher_.publish(twist)
 
 def main(args = None):
     rclpy.init(args = args)
