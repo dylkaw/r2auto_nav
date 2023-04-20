@@ -36,10 +36,6 @@ const char* mqtt_server = "172.20.10.8"; // CHANGE TO YOUR MQTT BROKER IP
 const char* TABLE_TOPIC = "table"; 
 const char* clientID = "ros2mqtt"; // MQTT client ID
 
-const char* mqtt_username = "neo"; // MQTT username
-const char* mqtt_password = "eg2310g579#!78"; // MQTT password
-
-
  // Initialise the WiFi and MQTT Client objects
 WiFiClient wifiClient;
 
@@ -65,7 +61,7 @@ void connect_MQTT(){
   Serial.println(WiFi.localIP());
 
   // Connect to MQTT Broker
-  if (client.connect(clientID, mqtt_username, mqtt_password)) {
+  if (client.connect(clientID) {
     Serial.println("Connected to MQTT Broker (computer)!");
   }
   else {
